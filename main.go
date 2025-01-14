@@ -1,25 +1,59 @@
 package main
 
 import (
-    "fmt"
-    "log"
-    "forum/db"
-    "net/http"
+	"fmt"
+	"log"
+	"net/http"
+	"os/exec"
+	"runtime"
+
+	"forum/db"
+	"forum/internals"
 )
 
 func main() {
-    // Initialize the database
-    err := db.Initialize()
-    if err != nil {
-        log.Fatalf("Error initializing database: %v", err)
-    }
-    defer db.Close() 
+	// Initialize the database
+	err := db.Initialize()
+	if err != nil {
+		log.Fatalf("Error initializing database: %v", err)
+	}
+	defer db.Close()
 
-    // INSERT ROUTES
+	// INSERT ROUTES
+	mux := http.NewServeMux()
+	// public routes
+	mux.HandleFunc("/", internals.Index)
+	mux.HandleFunc("/login", internals.Login)
+	mux.HandleFunc("/logout", internals.Logout)
+	mux.HandleFunc("/signup", internals.Signup)
+	// // private routes
+	// protected := http.NewServeMux()
+	// protected.HandleFunc("/dashboard", internals.Dashboard)
 
-    fmt.Println("Server started on :8080")
-    err = http.ListenAndServe(":8080", nil) 
-    if err != nil {
-        log.Fatalf("Error starting server: %v", err)
-    }
+	// mux.Handle("/dashboard", internals.Middleware(protected))
+
+    openBrowser("http://localhost:8080/")
+	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
+	http.ListenAndServe(":8080", mux)
+
+	
+}
+
+func openBrowser(url string) {
+	var err error
+fmt.Println(runtime.GOOS)
+	switch runtime.GOOS {
+	case "windows":
+		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
+	case "darwin":
+		err = exec.Command("open", url).Start()
+	case "linux":
+		err = exec.Command("xdg-open", url).Start()
+	default:
+		err = fmt.Errorf("unsupported platform")
+	}
+
+	if err != nil {
+		fmt.Printf("Failed to open browser: %v\n", err)
+	}
 }
