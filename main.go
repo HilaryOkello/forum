@@ -19,13 +19,17 @@ func main() {
 	}
 	defer db.Close()
 
-	// INSERT ROUTES
+	
 	mux := http.NewServeMux()
 	// public routes
 	mux.HandleFunc("/", internals.Index)
+
 	mux.HandleFunc("/login", internals.Login)
 	mux.HandleFunc("/logout", internals.Logout)
 	mux.HandleFunc("/signup", internals.Signup)
+
+	//static 
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// // private routes
 	// protected := http.NewServeMux()
 	// protected.HandleFunc("/dashboard", internals.Dashboard)

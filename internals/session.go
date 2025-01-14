@@ -13,7 +13,6 @@ type Session struct {
 
 	UserID int
 
-	UserEmail string
 
 	CreatedAt time.Time
 
@@ -37,7 +36,7 @@ func NewSessionStore() *SessionStore {
 }
 
 // Create a new session
-func (store *SessionStore) CreateSession(userID int, userEmail string, ipAddress string) *Session {
+func (store *SessionStore) CreateSession(userID int, username,  ipAddress string) *Session {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -49,7 +48,7 @@ func (store *SessionStore) CreateSession(userID int, userEmail string, ipAddress
 	session := &Session{
 		ID:           sessionid,
 		UserID:       userID,
-		UserEmail:    userEmail,
+		UserName:    username,
 		CreatedAt:    time.Now(),
 		ExpiresAt:    time.Now().Add(time.Hour * 24), 
 		IPAddress:    ipAddress,
@@ -62,16 +61,20 @@ func (store *SessionStore) CreateSession(userID int, userEmail string, ipAddress
 
 //retrieve a session
 func (store *SessionStore) GetSession(sessionID uuid.UUID) (*Session, bool) {
-	store.mu.RLock()
-	defer store.mu.RUnlock()
+    store.mu.RLock()
+    defer store.mu.RUnlock()
 
-	session, ok := store.sessions[sessionID]
-	if time.Now().After(session.ExpiresAt) {
-		delete(store.sessions, sessionID)
-		ok = false
+    session, ok := store.sessions[sessionID]
+    if !ok {
+        return nil, false
+    }
 
-	}
-	return session, ok
+    if time.Now().After(session.ExpiresAt) {
+        delete(store.sessions, sessionID)
+        return nil, false
+    }
+
+    return session, true
 }
 
 // delete a session
@@ -92,4 +95,16 @@ func (store *SessionStore) ExtendSession(sessionID uuid.UUID) {
 		session.ExpiresAt = time.Now().Add(time.Hour * 24)
 		session.LastActivity = time.Now()
 	}
+}
+
+func (store *SessionStore)GetSessionByUserId(userid int) (*Session, bool) {
+	store.mu.RLock()
+	defer store.mu.RUnlock()
+
+	for _, session := range store.sessions {
+		if session.UserID == userid {
+			return session, true
+		}
+	}
+	return nil, false
 }

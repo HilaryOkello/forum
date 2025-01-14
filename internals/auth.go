@@ -15,7 +15,7 @@ import (
 
 var store = NewSessionStore()
 
-var tmpl = template.Must(template.ParseGlob("*.html"))
+var tmpl = template.Must(template.ParseGlob("templates/*.html"))
 
 func encryptPassword(password string) (string, error) {
 	bcryptPassword, error := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -30,6 +30,12 @@ func decryptPassword(hashedPassword, password string) bool {
 	return err == nil
 }
 
+// PageData represents the data structure we'll pass to our templates
+type PageData struct {
+	IsLoggedIn bool
+	UserName   string
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -41,8 +47,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		for _, user := range users {
 			if user.Email == email && decryptPassword(user.Password, password) {
 				fmt.Printf("%s logged in successfully\n", user.UserName)
-
-				session := store.CreateSession(user.ID, user.Email, ipAddress)
+				if oldsession, ok := store.GetSessionByUserId(user.ID); ok {
+					store.DeleteSession(oldsession.ID)
+				}
+				session := store.CreateSession(user.ID, user.UserName,  ipAddress)
 				if session == nil {
 					http.Error(w, "Failed to create session", http.StatusInternalServerError)
 					return
@@ -55,10 +63,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 					HttpOnly: true,
 					MaxAge:   86400, // 24 hours
 				})
-				//to be changed later 
-				link := fmt.Sprintf("/dashboard?name=%s", user.UserName)
-				// Redirect to dashboard after successful login
-				http.Redirect(w, r, link, http.StatusSeeOther)
+
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+
 				return
 
 			}
@@ -191,7 +198,23 @@ func SaveUserToDb(user User) {
 	}
 }
 
-
 func Index(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "./index.html")
+	link := PageData{IsLoggedIn: false}
+	// check if user is logged in
+	cookie, err := r.Cookie("session")
+	if err == nil {
+		// Parse the UUID from cookie
+		if sessionID, err := uuid.FromString(cookie.Value); err == nil {
+			if session, valid := store.GetSession(sessionID); valid {
+				link = PageData{
+					IsLoggedIn: true,
+					UserName:   session.UserName,
+				}
+				tmpl.ExecuteTemplate(w, "index.html", link)
+				return
+			}
+		}
+	}
+
+	tmpl.ExecuteTemplate(w, "index.html", link)
 }
