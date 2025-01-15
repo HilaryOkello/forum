@@ -74,4 +74,45 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
+    // Parse the form data
+    err := r.ParseForm()
+    if err != nil {
+        http.Error(w, "Unable to parse form data", http.StatusBadRequest)
+        return
+    }
+
+    title := r.FormValue("title")
+    content := r.FormValue("content")
+    categoryIDs := r.Form["categories[]"] // The selected category IDs from the form
+
+    // Assuming userID is obtained from session or authentication
+    userID := 1 // We are suppose to replace this with the actual user ID from session when middleware is ready.
+
+    // Insert the new post into the POSTS table
+    postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
+    result, err := db.DB.Exec(postQuery, userID, title, content)
+    if err != nil {
+        http.Error(w, "Failed to create post", http.StatusInternalServerError)
+        return
+    }
+
+    // Get the ID of the newly created post
+    postID, err := result.LastInsertId()
+    if err != nil {
+        http.Error(w, "Failed to retrieve post ID", http.StatusInternalServerError)
+        return
+    }
+
+    // Insert into the Post_Categories table for each selected category
+    for _, categoryID := range categoryIDs {
+        _, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
+        if err != nil {
+            http.Error(w, "Failed to associate category with post", http.StatusInternalServerError)
+            return
+        }
+    }
+
+    // Return success response
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(map[string]string{"message": "Post created successfully!"})
 }
