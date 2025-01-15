@@ -9,6 +9,7 @@ import (
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/post"
 )
 
 func main() {
@@ -19,7 +20,6 @@ func main() {
 	}
 	defer db.Close()
 
-	
 	mux := http.NewServeMux()
 	// public routes
 	mux.HandleFunc("/", auth.Index)
@@ -27,8 +27,11 @@ func main() {
 	mux.HandleFunc("/login", auth.Login)
 	mux.HandleFunc("/logout", auth.Logout)
 	mux.HandleFunc("/signup", auth.Signup)
+	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
+	mux.HandleFunc("/categories", post.ServeCategories)
+	mux.HandleFunc("/create-post", post.CreatePost)
 
-	//static 
+	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// // private routes
 	// protected := http.NewServeMux()
@@ -36,16 +39,14 @@ func main() {
 
 	// mux.Handle("/dashboard", auth.Middleware(protected))
 
-    openBrowser("http://localhost:8080/")
+	// openBrowser("http://localhost:8080/")
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
 	http.ListenAndServe(":8080", mux)
-
-	
 }
 
 func openBrowser(url string) {
 	var err error
-fmt.Println(runtime.GOOS)
+	fmt.Println(runtime.GOOS)
 	switch runtime.GOOS {
 	case "windows":
 		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
