@@ -1,4 +1,4 @@
-package internals
+package auth
 
 import (
 	"sync"
@@ -12,7 +12,6 @@ type Session struct {
 	ID uuid.UUID
 
 	UserID int
-
 
 	CreatedAt time.Time
 
@@ -36,7 +35,7 @@ func NewSessionStore() *SessionStore {
 }
 
 // Create a new session
-func (store *SessionStore) CreateSession(userID int, username,  ipAddress string) *Session {
+func (store *SessionStore) CreateSession(userID int, username, ipAddress string) *Session {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 
@@ -48,9 +47,9 @@ func (store *SessionStore) CreateSession(userID int, username,  ipAddress string
 	session := &Session{
 		ID:           sessionid,
 		UserID:       userID,
-		UserName:    username,
+		UserName:     username,
 		CreatedAt:    time.Now(),
-		ExpiresAt:    time.Now().Add(time.Hour * 24), 
+		ExpiresAt:    time.Now().Add(time.Hour * 24),
 		IPAddress:    ipAddress,
 		LastActivity: time.Now(),
 	}
@@ -59,22 +58,22 @@ func (store *SessionStore) CreateSession(userID int, username,  ipAddress string
 	return session
 }
 
-//retrieve a session
+// retrieve a session
 func (store *SessionStore) GetSession(sessionID uuid.UUID) (*Session, bool) {
-    store.mu.RLock()
-    defer store.mu.RUnlock()
+	store.mu.RLock()
+	defer store.mu.RUnlock()
 
-    session, ok := store.sessions[sessionID]
-    if !ok {
-        return nil, false
-    }
+	session, ok := store.sessions[sessionID]
+	if !ok {
+		return nil, false
+	}
 
-    if time.Now().After(session.ExpiresAt) {
-        delete(store.sessions, sessionID)
-        return nil, false
-    }
+	if time.Now().After(session.ExpiresAt) {
+		delete(store.sessions, sessionID)
+		return nil, false
+	}
 
-    return session, true
+	return session, true
 }
 
 // delete a session
@@ -97,7 +96,7 @@ func (store *SessionStore) ExtendSession(sessionID uuid.UUID) {
 	}
 }
 
-func (store *SessionStore)GetSessionByUserId(userid int) (*Session, bool) {
+func (store *SessionStore) GetSessionByUserId(userid int) (*Session, bool) {
 	store.mu.RLock()
 	defer store.mu.RUnlock()
 

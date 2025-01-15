@@ -8,7 +8,8 @@ import (
 	"runtime"
 
 	"forum/db"
-	"forum/internals"
+	"forum/internals/auth"
+	"forum/internals/post"
 )
 
 func main() {
@@ -19,33 +20,33 @@ func main() {
 	}
 	defer db.Close()
 
-	
 	mux := http.NewServeMux()
 	// public routes
-	mux.HandleFunc("/", internals.Index)
+	mux.HandleFunc("/", auth.Index)
 
-	mux.HandleFunc("/login", internals.Login)
-	mux.HandleFunc("/logout", internals.Logout)
-	mux.HandleFunc("/signup", internals.Signup)
+	mux.HandleFunc("/login", auth.Login)
+	mux.HandleFunc("/logout", auth.Logout)
+	mux.HandleFunc("/signup", auth.Signup)
+	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
+	mux.HandleFunc("/categories", post.ServeCategories)
+	mux.HandleFunc("/create-post", post.CreatePost)
 
-	//static 
+	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// // private routes
 	// protected := http.NewServeMux()
-	// protected.HandleFunc("/dashboard", internals.Dashboard)
+	// protected.HandleFunc("/dashboard", auth.Dashboard)
 
-	// mux.Handle("/dashboard", internals.Middleware(protected))
+	// mux.Handle("/dashboard", auth.Middleware(protected))
 
-    openBrowser("http://localhost:8080/")
+	// openBrowser("http://localhost:8080/")
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
 	http.ListenAndServe(":8080", mux)
-
-	
 }
 
 func openBrowser(url string) {
 	var err error
-fmt.Println(runtime.GOOS)
+	fmt.Println(runtime.GOOS)
 	switch runtime.GOOS {
 	case "windows":
 		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
