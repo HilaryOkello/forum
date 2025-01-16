@@ -21,3 +21,9 @@ type commentInput struct {
     Content  string `json:"content"`
     UserID   int64  `json:"user_id"`
 }
+
+type reactToCommentInput struct {
+	CommentID    int64  `json:"comment_id"`
+	UserID       int64  `json:"user_id"`
+	ReactionType string `json:"reaction_type"`
+}

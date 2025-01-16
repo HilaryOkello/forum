@@ -120,4 +120,28 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReactToComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var input reactToCommentInput
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	query := `
+		INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
+		VALUES ($?, $?, $?)
+		ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
+
+	_, err := db.DB.Exec(query, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }
