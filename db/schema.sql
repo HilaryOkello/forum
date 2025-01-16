@@ -21,11 +21,13 @@ CREATE TABLE IF NOT EXISTS posts (
 CREATE TABLE IF NOT EXISTS comments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,     
     post_id INTEGER NOT NULL,                 
-    user_id INTEGER NOT NULL,                 
+    user_id INTEGER NOT NULL, 
+    parent_id INTEGER DEFAULT NULL,                
     content TEXT NOT NULL,                    
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES posts(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (parent_id) REFERENCES comments(id)
 );
 
 -- CATEGORIES Table
@@ -71,7 +73,3 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at DATETIME NOT NULL,             
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
-
--- Modify COMMENTS table to add parent_id for nested comments
-ALTER TABLE comments ADD COLUMN parent_id INTEGER DEFAULT NULL;
-ALTER TABLE comments ADD FOREIGN KEY (parent_id) REFERENCES comments(id);
