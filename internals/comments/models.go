@@ -1,5 +1,6 @@
 package comments
 
+// Comment represents a single comment
 type Comment struct {
 	ID        int64     `json:"id"`
 	PostID    int64     `json:"post_id"`
@@ -11,4 +12,12 @@ type Comment struct {
 	Likes     int       `json:"likes"`
 	Dislikes  int       `json:"dislikes"`
 	Children  []Comment `json:"children,omitempty"`
+}
+
+// CommentInput represents the input for creating a comment
+type commentInput struct { 
+    PostID   int64  `json:"post_id"`
+    ParentID *int64 `json:"parent_id"`
+    Content  string `json:"content"`
+    UserID   int64  `json:"user_id"`
 }
