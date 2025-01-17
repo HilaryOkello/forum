@@ -132,6 +132,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Insert or update the reaction for the comment
 	query := `
 		INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
 		VALUES ($?, $?, $?)
