@@ -9,6 +9,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// Category represents a category entity
+type Category struct {
+	Name        string
+	Description string
+}
+
 // global variable for database connection
 var DB *sql.DB
 
@@ -30,6 +36,12 @@ func Initialize() error {
 	err = applySchema()
 	if err != nil {
 		return fmt.Errorf("failed to apply schema: %v", err)
+	}
+
+	// Ensure default categories exist
+	err = EnsureDefaultCategories()
+	if err != nil {
+		return fmt.Errorf("failed to ensure default categories: %v", err)
 	}
 
 	log.Println("Database initialized successfully")
@@ -59,4 +71,37 @@ func Close() {
 	if err != nil {
 		log.Fatalf("Error closing database: %v", err)
 	}
+}
+
+// EnsureDefaultCategories inserts default categories if they don't exist
+func EnsureDefaultCategories() error {
+	// List of default categories
+	defaultCategories := []Category{
+		{Name: "Technology", Description: "Posts related to tech trends, innovations, and updates"},
+		{Name: "Health", Description: "Topics covering fitness, wellness, and healthcare advice"},
+		{Name: "Education", Description: "Discussions on learning, schools, and education systems"},
+		{Name: "Entertainment", Description: "Posts about movies, music, and other entertainment topics"},
+		{Name: "Travel", Description: "Sharing travel experiences, tips, and destinations"},
+		{Name: "Food", Description: "Recipes, cooking tips, and culinary experiences"},
+		{Name: "Business", Description: "Business insights, entrepreneurship, and market trends"},
+		{Name: "Sports", Description: "Sports news, updates, and discussions on favorite teams"},
+		{Name: "Lifestyle", Description: "Lifestyle tips, fashion, and daily living topics"},
+		{Name: "Politics", Description: "Discussions on political events and governance issues"},
+	}
+
+	// Prepare the query to check and insert categories
+	for _, category := range defaultCategories {
+		query := `
+		INSERT INTO categories (name, description)
+		SELECT ?, ?
+		WHERE NOT EXISTS (
+			SELECT 1 FROM categories WHERE name = ?
+		)`
+		_, err := DB.Exec(query, category.Name, category.Description, category.Name)
+		if err != nil {
+			return fmt.Errorf("failed to ensure default category '%s': %v", category.Name, err)
+		}
+	}
+
+	return nil
 }

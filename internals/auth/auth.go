@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"forum/db"
+	"forum/internals/post"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -50,11 +52,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				if oldsession, ok := store.GetSessionByUserId(user.ID); ok {
 					store.DeleteSession(oldsession.ID)
 				}
-				session := store.CreateSession(user.ID, user.UserName,  ipAddress)
+				session := store.CreateSession(user.ID, user.UserName, ipAddress)
 				if session == nil {
-					http.Error(w, "Failed to create session", http.StatusInternalServerError)
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusInternalServerError)
+					json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create session"})
 					return
 				}
+
 				// Set session cookie
 				http.SetCookie(w, &http.Cookie{
 					Name:     "session",
@@ -64,17 +69,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 					MaxAge:   86400, // 24 hours
 				})
 
-				http.Redirect(w, r, "/", http.StatusSeeOther)
-
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]string{
+					"status":   "success",
+					"username": user.UserName,
+				})
 				return
-
 			}
 		}
-		// If credentials are invalid, re-render login page with error
-		if err := tmpl.ExecuteTemplate(w, "login.html", "Invalid credentials"); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		// If credentials are invalid, send error JSON response
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid credentials"})
+		return
 
 	} else if r.Method == http.MethodGet {
 		if err := tmpl.ExecuteTemplate(w, "login.html", nil); err != nil {
@@ -136,30 +144,50 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		tmpl.ExecuteTemplate(w, "signup.html", nil)
-	} else if r.Method == http.MethodPost {
-		email := r.FormValue("email")
-		password := r.FormValue("password")
-		name := r.FormValue("name")
-		if email == "" || password == "" || name == "" {
-			tmpl.ExecuteTemplate(w, "signup.html", "All fields are required")
-			return
-		}
-		hashedPassword, err := encryptPassword(password)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		var user User
-		user.Email = email
-		user.Password = string(hashedPassword)
-		user.UserName = name
-		SaveUserToDb(user)
+    if r.Method == http.MethodGet {
+        tmpl.ExecuteTemplate(w, "signup.html", nil)
+    } else if r.Method == http.MethodPost {
+        email := r.FormValue("email")
+        password := r.FormValue("password")
+        name := r.FormValue("username") // Changed from "name" to match the form
+        
+        if email == "" || password == "" || name == "" {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusBadRequest)
+            json.NewEncoder(w).Encode(map[string]string{"error": "All fields are required"})
+            return
+        }
 
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
+        hashedPassword, err := encryptPassword(password)
+        if err != nil {
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusInternalServerError)
+            json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
+            return
+        }
+
+        var user User
+        user.Email = email
+        user.Password = string(hashedPassword)
+        user.UserName = name
+
+        err = SaveUserToDb(user)
+        if err != nil {
+            // If there's an error (likely user already exists)
+            w.Header().Set("Content-Type", "application/json")
+            w.WriteHeader(http.StatusConflict)
+            json.NewEncoder(w).Encode(map[string]string{"error": "User already exists"})
+            return
+        }
+
+        // Success case
+        w.Header().Set("Content-Type", "application/json")
+        w.WriteHeader(http.StatusOK)
+        json.NewEncoder(w).Encode(map[string]string{
+            "status": "success",
+            "username": user.UserName,
+        })
+    }
 }
 
 func ReadfromDb() []User {
@@ -183,38 +211,38 @@ func ReadfromDb() []User {
 	return users
 }
 
-func SaveUserToDb(user User) {
+func SaveUserToDb(user User)error {
 	stmt, err := db.DB.Prepare("INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
-		return
+		return err
 	}
 	defer stmt.Close()
 
 	user.CreatedAt = time.Now()
 	_, err = stmt.Exec(user.UserName, user.Email, user.Password, user.CreatedAt)
-	if err != nil {
-		log.Printf("Error saving user: %v", err)
+	if err!=nil{
+		return err
 	}
+	return nil
 }
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	link := PageData{IsLoggedIn: false}
-	// check if user is logged in
-	cookie, err := r.Cookie("session")
-	if err == nil {
-		// Parse the UUID from cookie
-		if sessionID, err := uuid.FromString(cookie.Value); err == nil {
-			if session, valid := store.GetSession(sessionID); valid {
-				link = PageData{
-					IsLoggedIn: true,
-					UserName:   session.UserName,
-				}
-				tmpl.ExecuteTemplate(w, "index.html", link)
-				return
-			}
-		}
+// ServeHomePage handles requests to render the homepage
+func ServeHomePage(w http.ResponseWriter, r *http.Request) {
+	posts, err := post.FetchPosts()
+	if err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+	t, err := template.ParseFiles("./templates/index.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+	if err := t.Execute(w, map[string]interface{}{
+		"Posts": posts,
+	}); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 
-	tmpl.ExecuteTemplate(w, "index.html", link)
 }

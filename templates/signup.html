@@ -1,231 +1,312 @@
-<html><head>
+<html><head><base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign Up - FPL Forum</title>
-  
+  <title>Sign Up - THe FOruM</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-  :root {
-    --primary: #1A472A;
-    --accent: #FFD700;
-    --text: #333;
-    --light: #fff;
-  }
-  
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-  }
-  
-  body {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(45deg, var(--primary), #2d5a3c);
-  }
-  
-  .login-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 2.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
-    position: relative;
-    overflow: hidden;
-  }
-  
-  h1 {
-    text-align: center;
-    margin-bottom: 2rem;
-    color: var(--primary);
-    font-weight: 600;
-  }
-  
-  .form-group {
-    margin-bottom: 1.5rem;
-    position: relative;
-  }
-  
-  input {
-    width: 100%;
-    padding: 0.8rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: all 0.3s ease;
-    font-size: 1rem;
-  }
-  
-  input:focus {
-    border-color: var(--primary);
-  }
-  
-  label {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    transition: all 0.3s ease;
-    pointer-events: none;
-    background: white;
-    padding: 0 0.5rem;
-  }
-  
-  input:focus + label,
-  input:not(:placeholder-shown) + label {
-    top: 0;
-    font-size: 0.8rem;
-    color: var(--primary);
-  }
-  
-  button {
-    width: 100%;
-    padding: 1rem;
-    background: var(--primary);
-    border: none;
-    border-radius: 0.5rem;
-    color: var(--accent);
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-  
-  button:hover {
-    background: #2d5a3c;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(26, 71, 42, 0.2);
-  }
-  
-  .signup-link {
-    text-align: center;
-    margin-top: 1.5rem;
-  }
-  
-  .signup-link a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 500;
-    transition: all 0.3s ease;
-  }
-  
-  .signup-link a:hover {
-    color: var(--accent);
-  }
-  
-  .floating-shapes {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-  }
-  
-  .shape {
-    position: absolute;
-    animation: float 6s infinite;
-  }
-  
-  .shape:nth-child(1) {
-    top: 20%;
-    left: 10%;
-    animation-delay: 0s;
-  }
-  
-  .shape:nth-child(2) {
-    top: 60%;
-    right: 10%;
-    animation-delay: 2s;
-  }
-  
-  .shape:nth-child(3) {
-    bottom: 20%;
-    left: 15%;
-    animation-delay: 4s;
-  }
-  
-  @keyframes float {
-    0% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-10px) rotate(5deg); }
-    100% { transform: translateY(0px) rotate(0deg); }
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #030303;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .background-design {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      opacity: 0.1;
+      pointer-events: none;
+    }
+
+    .wave {
+      position: absolute;
+      width: 200%;
+      height: 200%;
+      animation: wave 20s linear infinite;
+    }
+
+    @keyframes wave {
+      0% { transform: translate(-50%, -50%) rotate(0deg); }
+      100% { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    .signup-container {
+      background: rgba(26, 26, 27, 0.95);
+      padding: 2.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                  0 16px 48px rgba(215, 218, 220, 0.1);
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #343536;
+      backdrop-filter: blur(10px);
+      z-index: 1;
+      animation: container-entrance 0.6s ease-out;
+    }
+
+    @keyframes container-entrance {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #D7DADC;
+      font-weight: 600;
+      position: relative;
+    }
+
+    h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #D7DADC, transparent);
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid #343536;
+      border-radius: 0.5rem;
+      outline: none;
+      transition: all 0.3s ease;
+      background: #272729;
+      color: #D7DADC;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      border-color: #D7DADC;
+      box-shadow: 0 0 0 2px rgba(215, 218, 220, 0.1);
+    }
+
+    label {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #818384;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      background: #272729;
+      padding: 0 0.5rem;
+    }
+
+    input:focus + label,
+    input:not(:placeholder-shown) + label {
+      top: 0;
+      font-size: 0.8rem;
+      color: #D7DADC;
+    }
+
+    button {
+      width: 100%;
+      padding: 1rem;
+      background: #D7DADC;
+      border: none;
+      border-radius: 0.5rem;
+      color: #1A1A1B;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: rgba(255, 255, 255, 0.1);
+      transform: rotate(45deg);
+      transition: 0.5s;
+    }
+
+    button:hover {
+      background: #FFFFFF;
+      transform: translateY(-2px);
+    }
+
+    button:hover::after {
+      left: 100%;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #818384;
+    }
+
+    .login-link a {
+      color: #D7DADC;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+      color: #FFFFFF;
+    }
+
+    .error-message {
+      color: #ff4444;
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
   </style>
-  
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  </head>
-  
-  <body>
-  <div class="login-container">
-    <div class="floating-shapes">
-      <svg class="shape" width="50" height="50" viewBox="0 0 50 50">
-        <circle cx="25" cy="25" r="20" fill="#1A472A" opacity="0.2"></circle>
-      </svg>
-      <svg class="shape" width="40" height="40" viewBox="0 0 40 40">
-        <rect width="30" height="30" x="5" y="5" fill="#FFD700" opacity="0.2"></rect>
-      </svg>
-      <svg class="shape" width="45" height="45" viewBox="0 0 45 45">
-        <polygon points="22.5,5 40,35 5,35" fill="#2d5a3c" opacity="0.2"></polygon>
-      </svg>
-    </div>
-  
-    <h1>Join FPL Forum</h1>
+</head>
+
+<body>
+  <div class="background-design">
+    <svg class="wave" viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#D7DADC" fill-opacity="0.1" d="M0,160L48,170.7C96,181,192,203,288,186.7C384,171,480,117,576,117.3C672,117,768,171,864,197.3C960,224,1056,224,1152,197.3C1248,171,1344,117,1392,90.7L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+      <path fill="#343536" fill-opacity="0.1" d="M0,96L48,122.7C96,149,192,203,288,224C384,245,480,235,576,202.7C672,171,768,117,864,122.7C960,128,1056,192,1152,213.3C1248,235,1344,213,1392,202.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+  </div>
+
+  <div class="signup-container">
+    <h1>Create Account</h1>
     
-    <form id="signupForm" action="/signup" method="POST">
+    <form id="signupForm" aria-labelledby="signupFormHeader">
       <div class="form-group">
-        <input type="text" id="name" name="name" placeholder=" " required>
-        <label for="name">Username</label>
+        <input type="text" id="username" name="username" placeholder=" " required aria-label="Username">
+        <label for="username">Username</label>
       </div>
-      
+
       <div class="form-group">
-        <input type="email" id="email" name="email" placeholder=" " required>
+        <input type="email" id="email" name="email" placeholder=" " required aria-label="Email">
         <label for="email">Email</label>
       </div>
       
       <div class="form-group">
-        <input type="password" id="password" name="password" placeholder=" " required>
+        <input type="password" id="password" name="password" placeholder=" " required aria-label="Password">
         <label for="password">Password</label>
       </div>
-      
+
       <div class="form-group">
-        <input type="password" id="confirmPassword" placeholder=" " required>
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder=" " required aria-label="Confirm Password">
         <label for="confirmPassword">Confirm Password</label>
       </div>
       
       <button type="submit">Create Account</button>
+      <div id="errorMessage" class="error-message" role="alert"></div>
     </form>
-  
-    <div class="signup-link">
+
+    <div class="login-link">
       <p>Already have an account? <a href="/login">Login here</a></p>
     </div>
   </div>
-  
+
   <script>
-  document.getElementById('signupForm').addEventListener('submit', function(e) {
-   
-    
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-  
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
-      return;
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const errorMessage = document.getElementById('errorMessage');
+      const button = document.querySelector('button');
+      //check password strength
+      if (password.length < 8) {
+        errorMessage.textContent = 'Password must be at least 8 characters long';
+        errorMessage.style.display = 'block';
+        return;
+      }
+      // Basic validation
+      if (password !== confirmPassword) {
+        errorMessage.textContent = 'Passwords do not match';
+        errorMessage.style.display = 'block';
+        return;
+      }
+
+      // Create FormData object
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('email', email);
+      formData.append('password', password);
+
+      try {
+    const response = await fetch('/signup', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'email': email,
+            'password': password,
+            'username': username
+        })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+        // Success animation
+        button.style.width = '50px';
+        button.innerHTML = '✓';
+        button.style.borderRadius = '25px';
+        
+        // Redirect after animation
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1000);
+    } else {
+        errorMessage.textContent = data.error || 'Signup failed. Please try again.';
+        errorMessage.style.display = 'block';
     }
-  
-    // Add your signup logic here
-    console.log('Signup attempt:', { name, email });
-    
-    // Success animation
-    const button = document.querySelector('button');
-    button.style.width = '50px';
-    button.innerHTML = '✓';
-    button.style.borderRadius = '25px';
-    
-   
-  });
+} catch (error) {
+    console.error('Error:', error);
+    errorMessage.textContent = 'An error occurred. Please try again later.';
+    errorMessage.style.display = 'block';
+}
+    });
   </script>
-  </body>
-  </html>
+</body>
+</html>

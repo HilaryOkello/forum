@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
-	"runtime"
+	
 
 	"forum/db"
+	"forum/internals/post"
 	"forum/internals/auth"
 	"forum/internals/comments"
-	"forum/internals/post"
 )
 
 func main() {
@@ -23,7 +22,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	// public routes
-	mux.HandleFunc("/", auth.Index)
+	mux.HandleFunc("/", auth.ServeHomePage)
 
 	mux.HandleFunc("/login", auth.Login)
 	mux.HandleFunc("/logout", auth.Logout)
@@ -44,26 +43,8 @@ func main() {
 
 	// mux.Handle("/dashboard", auth.Middleware(protected))
 
-	// openBrowser("http://localhost:8080/")
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
 	http.ListenAndServe(":8080", mux)
 }
 
-func openBrowser(url string) {
-	var err error
-	fmt.Println(runtime.GOOS)
-	switch runtime.GOOS {
-	case "windows":
-		err = exec.Command("rundll32", "url.dll,FileProtocolHandler", url).Start()
-	case "darwin":
-		err = exec.Command("open", url).Start()
-	case "linux":
-		err = exec.Command("xdg-open", url).Start()
-	default:
-		err = fmt.Errorf("unsupported platform")
-	}
 
-	if err != nil {
-		fmt.Printf("Failed to open browser: %v\n", err)
-	}
-}
