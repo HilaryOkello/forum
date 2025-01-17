@@ -1,0 +1,32 @@
+.vote-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #555;
+}
+  
+  .vote-btn:hover {
+    color: #000;
+}
+  
+  .votes {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+}
+  
+  .post-content {
+    flex: 1;
+}
+  
+  .post {
+    display: flex;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+  
