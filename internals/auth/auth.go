@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"forum/db"
+	"forum/internals/post"
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +51,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 				if oldsession, ok := store.GetSessionByUserId(user.ID); ok {
 					store.DeleteSession(oldsession.ID)
 				}
-				session := store.CreateSession(user.ID, user.UserName,  ipAddress)
+				session := store.CreateSession(user.ID, user.UserName, ipAddress)
 				if session == nil {
 					http.Error(w, "Failed to create session", http.StatusInternalServerError)
 					return
@@ -198,23 +199,22 @@ func SaveUserToDb(user User) {
 	}
 }
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	link := PageData{IsLoggedIn: false}
-	// check if user is logged in
-	cookie, err := r.Cookie("session")
-	if err == nil {
-		// Parse the UUID from cookie
-		if sessionID, err := uuid.FromString(cookie.Value); err == nil {
-			if session, valid := store.GetSession(sessionID); valid {
-				link = PageData{
-					IsLoggedIn: true,
-					UserName:   session.UserName,
-				}
-				tmpl.ExecuteTemplate(w, "index.html", link)
-				return
-			}
-		}
+// ServeHomePage handles requests to render the homepage
+func ServeHomePage(w http.ResponseWriter, r *http.Request) {
+	posts, err := post.FetchPosts()
+	if err != nil {
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		return
+	}
+	t, err := template.ParseFiles("./templates/index.html")
+	if err != nil {
+		http.Error(w, "Failed to load template", http.StatusInternalServerError)
+		return
+	}
+	if err := t.Execute(w, map[string]interface{}{
+		"Posts": posts,
+	}); err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 
-	tmpl.ExecuteTemplate(w, "index.html", link)
 }
