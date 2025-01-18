@@ -28,14 +28,50 @@ document.querySelector("form").addEventListener("submit", function(event) {
         method: "POST",
         body: postData,
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.redirected) {
+            // Show a success pop-up and redirect after a delay
+            showNotification("Post created successfully!");
+            setTimeout(() => {
+                window.location.href = response.url; // Redirect to the homepage
+            }, 2000); // Delay of 2 seconds
+        } else {
+            return response.json();
+        }
+    })
     .then(data => {
-        alert(data.message); // Show the success message
-        // Optionally, you can redirect or reset the form here
+        if (data && data.message) {
+            showNotification(data.message, "error");
+        }
     })
     .catch(error => {
         console.error("Error:", error);
-        alert("Failed to create post");
+        showNotification("Failed to create post", "error");
     });
 });
-    
+
+/**
+ * Function to display a notification
+ * @param {string} message - The message to display
+ * @param {string} type - Type of notification ('success' or 'error')
+ */
+function showNotification(message, type = "success") {
+    const notification = document.createElement("div");
+    notification.textContent = message;
+    notification.className = `notification ${type}`;
+
+    document.body.appendChild(notification);
+
+    // Show the notification with smooth transitions
+    setTimeout(() => {
+        notification.classList.add("show");
+    }, 10);
+
+    // Hide and remove the notification after 2 seconds
+    setTimeout(() => {
+        notification.classList.remove("show");
+        setTimeout(() => {
+            notification.remove();
+        }, 500);
+    }, 2000);
+}
