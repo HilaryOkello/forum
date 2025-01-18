@@ -58,3 +58,31 @@ body {
 .form-group button:hover {
     background: #45a049;
 }
+
+/* Notification base style */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    background-color: #4caf50; /* Green for success */
+    color: white;
+    font-size: 14px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.5s, transform 0.5s;
+    z-index: 1000;
+}
+
+/* Show notification */
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Error notification styling */
+.notification.error {
+    background-color: #f44336; /* Red for error */
+}
