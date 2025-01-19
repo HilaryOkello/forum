@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
 	mux.HandleFunc("/categories", post.ServeCategories)
 	mux.HandleFunc("/create-post", post.CreatePost)
+	mux.HandleFunc("/post/view", post.ViewPost)
 
 	// Comment Routes
 	mux.HandleFunc("/comments", comments.GetComments)
