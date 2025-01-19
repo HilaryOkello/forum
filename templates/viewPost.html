@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Forum - View Post</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/css/index.css">
+</head>
+<body>
+    <header class="header" role="banner">
+        <a href="/" class="logo">
+            <i class="fas fa-rocket"></i>
+            The Forum
+        </a>
+
+        <div class="search" role="search">
+            <i class="fas fa-search" aria-hidden="true"></i>
+            <input type="text" placeholder="Search MyReddit" aria-label="Search posts" />
+        </div>
+
+        <div class="nav-right">
+            <button class="create-post-btn" aria-label="Create new post">
+                <a href="/create-post-form">Create-Post</a>
+            </button>
+            <button class="nav-btn" aria-label="Notifications">
+                <i class="far fa-bell" aria-hidden="true"></i>
+            </button>
+            <button class="nav-btn" aria-label="Messages">
+                <i class="far fa-comment-alt" aria-hidden="true"></i>
+            </button>
+            <div class="user-dropdown">
+                <button class="nav-btn" aria-label="User menu">
+                    <img src="/static/user.png" alt="User avatar" class="user-avatar" />
+                </button>
+                <div class="user-menu" role="menu">
+                    {{if .IsLoggedIn}}
+                    <span class="welcome-message" role="menuitem">Hi {{.UserName}}</span>
+                    <a href="/logout" class="user-menu-item" role="menuitem">
+                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+                    </a>
+                    {{else}}
+                    <a href="/login" class="user-menu-item" role="menuitem">
+                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+                    </a>
+                    <a href="/signup" class="user-menu-item" role="menuitem">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
+                    </a>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="layout">
+        <nav class="left-sidebar" role="navigation">
+            <div class="sidebar-section">
+                <h3>Categories</h3>
+                <a href="/categories?name=technology" class="sidebar-link" aria-label="Technology category">
+                    <i class="fas fa-microchip" aria-hidden="true"></i> Technology
+                </a>
+                <a href="/categories?name=music" class="sidebar-link" aria-label="Music category">
+                    <i class="fas fa-music" aria-hidden="true"></i> Music
+                </a>
+                <a href="/categories?name=politics" class="sidebar-link" aria-label="Politics category">
+                    <i class="fas fa-landmark" aria-hidden="true"></i> Politics
+                </a>
+                <a href="/categories?name=sports" class="sidebar-link" aria-label="Sports category">
+                    <i class="fas fa-basketball-ball" aria-hidden="true"></i> Sports
+                </a>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>My Communities</h3>
+                <a href="/r/programming" class="sidebar-link"><i class="fas fa-code"></i> r/programming</a>
+                <a href="/r/science" class="sidebar-link"><i class="fas fa-flask"></i> r/science</a>
+                <a href="/r/technology" class="sidebar-link"><i class="fas fa-microchip"></i> r/technology</a>
+            </div>
+        </nav>
+        <main class="feed" role="main">
+            <div class="sort-bar">
+                <button class="sort-btn active" aria-label="Sort by hot">Hot</button>
+                <button class="sort-btn" aria-label="Sort by new">New</button>
+                <button class="sort-btn" aria-label="Sort by top">Top</button>
+                <button class="sort-btn" aria-label="Sort by controversial">
+                    Controversial
+                </button>
+            </div>
+            <div class="post">
+                <div class="votes">
+                    <button class="vote-btn" aria-label="Upvote">
+                        <i class="fas fa-thumbs-up" aria-hidden="true"></i>
+                    </button>
+                    <span>--</span>
+                    <!-- Placeholder for vote count -->
+                    <button class="vote-btn" aria-label="Downvote">
+                        <i class="fas fa-thumbs-down" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="post">
+                    <a href="#" class="community-name">Posted by {{.UserName}}</a>
+                    <h2 class="post-title">{{.Title}}</h2>
+                    <p>{{.Content}}</p>
+                    <div class="post-meta">
+                        <a href="#" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 0
+                            comments</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <aside class="right-sidebar" role="complementary">
+            <h3 id="trending-title">Trending Today</h3>
+            <div class="trending-card" role="article" aria-labelledby="trending-title">
+                <h4>SpaceX successfully launches new satellite constellation</h4>
+                <p>2.5k upvotes &#x2022; 324 comments</p>
+            </div>
+            <div class="trending-card" role="article" aria-labelledby="trending-title">
+                <h4>Major breakthrough in renewable energy storage</h4>
+                <p>1.8k upvotes &#x2022; 245 comments</p>
+            </div>
+            <div class="trending-card" role="article" aria-labelledby="trending-title">
+                <h4>
+                    New AI model achieves human-level performance in complex tasks
+                </h4>
+                <p>1.2k upvotes &#x2022; 198 comments</p>
+            </div>
+        </aside>
+    </div>
+    <footer class="footer" role="contentinfo">
+        <div class="footer-links">
+            <a href="/about">About</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+            <a href="/contact">Contact Us</a>
+        </div>
+        <p>2025 MyReddit. All rights reserved.</p>
+    </footer>
+    <script>
+        document.querySelectorAll(".vote-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const voteCount = this.parentElement.querySelector("span");
+            const currentVotes = parseInt(
+              voteCount.textContent.replace("k", "000")
+            );
+            this.parentElement
+              .querySelectorAll(".vote-btn")
+              .forEach((b) => (b.style.color = "#818384"));
+            if (this.textContent === "▲") {
+              voteCount.textContent = currentVotes + 1 + "k";
+              this.style.color = "#FF4500";
+            } else {
+              voteCount.textContent = currentVotes - 1 + "k";
+              this.style.color = "#7193FF";
+            }
+          });
+        });
+        document.querySelectorAll(".sort-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            document.querySelector(".sort-btn.active").classList.remove("active");
+            this.classList.add("active");
+          });
+        });
+        window.addEventListener("load", () => {
+          const layout = document.querySelector(".layout");
+          const updateLayout = () => {
+            const windowWidth = window.innerWidth;
+            const contentWidth = Math.min(1600, windowWidth * 0.95);
+            layout.style.maxWidth = `${contentWidth}px`;
+          };
+          updateLayout();
+          window.addEventListener("resize", updateLayout);
+        });
+        const userBtn = document.querySelector(".user-dropdown .nav-btn");
+        const userMenu = document.querySelector(".user-menu");
+        userBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          userMenu.classList.toggle("show");
+        });
+        document.addEventListener("click", (e) => {
+          if (!userMenu.contains(e.target)) {
+            userMenu.classList.remove("show");
+          }
+        });
+        userMenu.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+    </script>    
+    <script src="/static/js/index.js"></script>
+</body>
+</html>
