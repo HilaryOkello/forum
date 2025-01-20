@@ -2,6 +2,7 @@ package comments
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"forum/db"
@@ -95,6 +96,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the request body into the input struct
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		fmt.Println(err.Error())
 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
@@ -102,11 +104,12 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	var id int64
 	var createdAt string
 
-	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES ($?, $?, $?, $?) RETURNING id, createdAt`
+	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, createdAt`
 
 	// Execute the query and scan the result into the id and createdAt variables
 	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, input.UserID).Scan(&id, &createdAt)
 	if err != nil {
+		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -135,7 +138,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 	// Insert or update the reaction for the comment
 	query := `
 		INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
-		VALUES ($?, $?, $?)
+		VALUES (?, ?, ?)
 		ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
 
 	_, err := db.DB.Exec(query, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)

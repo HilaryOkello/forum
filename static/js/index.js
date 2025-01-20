@@ -45,8 +45,9 @@ commentForm.addEventListener("submit", (event) => {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({
-            post_id: postID,
-            user_id: "", // Replace with the logged-in user's ID
+            post_id: Number(postID),
+            parent_id: null, // Set to null for top-level comments
+            user_id: 1, // Replace with the logged-in user's ID
             content: content,
         }),
     })
@@ -60,6 +61,7 @@ commentForm.addEventListener("submit", (event) => {
                 alert("Failed to post comment.");
             }
         });
+        
 });
 
 
