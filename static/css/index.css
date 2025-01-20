@@ -22,7 +22,7 @@
     flex: 1;
 }
   
-  .post {
+  .post, .view-post {
     display: flex;
     margin-bottom: 20px;
     padding: 10px;

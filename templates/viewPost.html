@@ -97,7 +97,7 @@
                 </button>
             </div>
 
-            <div class="post" id="post" post-id="{{ .ID}}">
+            <div class="view-post" id="view-post" post-id="{{ .ID}}">
                 <div class="votes">
                     <button class="vote-btn" aria-label="Upvote">
                         <i class="fas fa-thumbs-up" aria-hidden="true"></i>
@@ -115,6 +115,15 @@
                     <div class="post-meta">
                         <a href="#" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 0
                             comments</a>
+                    </div>
+                    <div id="comments-section">
+                        <form id="comment-form">
+                            <textarea id="comment-content" placeholder="Write your comment..."></textarea>
+                            <button type="submit">Post Comment</button>
+                        </form>
+
+                        <h3>Comments</h3>
+                        <div id="comments-list"></div>
                     </div>
                 </div>
             </div>
