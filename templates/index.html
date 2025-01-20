@@ -126,7 +126,7 @@
         </div>
 
         {{range .Posts}}
-        <div class="post">
+        <div class="post" post-id="{{ .ID}}">
           <div class="votes">
             <button class="vote-btn" aria-label="Upvote">
               <i class="fas fa-thumbs-up" aria-hidden="true"></i>

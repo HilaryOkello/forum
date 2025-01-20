@@ -7,6 +7,7 @@ import (
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/comments"
 	"forum/internals/post"
 )
 
@@ -28,7 +29,12 @@ func main() {
 	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
 	mux.HandleFunc("/categories", post.ServeCategories)
 	mux.HandleFunc("/create-post", auth.CreatePost)
+	mux.HandleFunc("/view-post", post.ViewPost)
 
+	// Comment Routes
+	mux.HandleFunc("/comments", comments.GetComments)
+	mux.HandleFunc("/comments/create", comments.CreateComment)
+	mux.HandleFunc("/comments/react", comments.ReactToComment)
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// // private routes
