@@ -66,7 +66,7 @@ func fetchPostFromDB(postID string) (*Post, error) {
 	err := db.DB.QueryRow(query, postID).Scan(&post.ID, &post.Title, &post.Content, &post.UserName, &post.CreatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("post with ID %d not found", postID)
+			return nil, fmt.Errorf("post with ID %s not found", postID)
 		}
 		return nil, fmt.Errorf("failed to fetch post: %v", err)
 	}
