@@ -23,7 +23,7 @@ postDiv.addEventListener('click', () => {
 
   // Redirect to post/view with the post ID
   if (postId) {
-    window.location.href = `/post/view?id=${postId}`;
+    window.location.href = `/view-post?id=${postId}`;
   } else {
     console.error('Post ID not found!');
   }
