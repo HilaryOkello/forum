@@ -12,12 +12,42 @@
   <link rel="stylesheet" href="/static/css/index.css">
 </head>
 
-<body>
-  <header class="header" role="banner">
-    <a href="/" class="logo">
-      <i class="fas fa-rocket"></i>
-      The Forum
-    </a>
+      <div class="nav-right">
+        <a href="/" class="nav-link"></a>  <!-- redirect to homepage after successful creation for post. -->
+        <button class="create-post-btn" aria-label="Create new post">
+          <a href="/create-post-form">Create-Post</a>
+        </button>
+        <div id="notification" class="hidden"></div>  <!-- for notification pop-up -->
+        <button class="nav-btn" aria-label="Notifications">
+          <i class="far fa-bell" aria-hidden="true"></i>
+        </button>
+        <button class="nav-btn" aria-label="Messages">
+          <i class="far fa-comment-alt" aria-hidden="true"></i>
+        </button>
+        <div class="user-dropdown">
+          <button class="nav-btn" aria-label="User menu">
+            <img src="/static/user.png" alt="User avatar" class="user-avatar" />
+          </button>
+          <div class="user-menu" role="menu">
+            {{if .IsLoggedIn}}
+            <span class="welcome-message" role="menuitem"
+              >Hi {{.UserName}}</span
+            >
+            <a href="/logout" class="user-menu-item" role="menuitem">
+              <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+            </a>
+            {{else}}
+            <a href="/login" class="user-menu-item" role="menuitem">
+              <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+            </a>
+            <a href="/signup" class="user-menu-item" role="menuitem">
+              <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
+            </a>
+            {{end}}
+          </div>
+        </div>
+      </div>
+    </header>
 
     <div class="search" role="search">
       <i class="fas fa-search" aria-hidden="true"></i>

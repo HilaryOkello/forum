@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	
 
 	"forum/db"
-	"forum/internals/post"
 	"forum/internals/auth"
 	"forum/internals/comments"
+	"forum/internals/post"
 )
 
 func main() {
@@ -29,8 +28,7 @@ func main() {
 	mux.HandleFunc("/signup", auth.Signup)
 	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
 	mux.HandleFunc("/categories", post.ServeCategories)
-	mux.HandleFunc("/create-post", post.CreatePost)
-	mux.HandleFunc("/post/view", post.ViewPost)
+	mux.HandleFunc("/create-post", auth.CreatePost)
 
 	// Comment Routes
 	mux.HandleFunc("/comments", comments.GetComments)
@@ -47,5 +45,3 @@ func main() {
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
 	http.ListenAndServe(":8080", mux)
 }
-
-

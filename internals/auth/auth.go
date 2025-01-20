@@ -144,50 +144,50 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
-    if r.Method == http.MethodGet {
-        tmpl.ExecuteTemplate(w, "signup.html", nil)
-    } else if r.Method == http.MethodPost {
-        email := r.FormValue("email")
-        password := r.FormValue("password")
-        name := r.FormValue("username") // Changed from "name" to match the form
-        
-        if email == "" || password == "" || name == "" {
-            w.Header().Set("Content-Type", "application/json")
-            w.WriteHeader(http.StatusBadRequest)
-            json.NewEncoder(w).Encode(map[string]string{"error": "All fields are required"})
-            return
-        }
+	if r.Method == http.MethodGet {
+		tmpl.ExecuteTemplate(w, "signup.html", nil)
+	} else if r.Method == http.MethodPost {
+		email := r.FormValue("email")
+		password := r.FormValue("password")
+		name := r.FormValue("username") // Changed from "name" to match the form
 
-        hashedPassword, err := encryptPassword(password)
-        if err != nil {
-            w.Header().Set("Content-Type", "application/json")
-            w.WriteHeader(http.StatusInternalServerError)
-            json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
-            return
-        }
+		if email == "" || password == "" || name == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "All fields are required"})
+			return
+		}
 
-        var user User
-        user.Email = email
-        user.Password = string(hashedPassword)
-        user.UserName = name
+		hashedPassword, err := encryptPassword(password)
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
+			return
+		}
 
-        err = SaveUserToDb(user)
-        if err != nil {
-            // If there's an error (likely user already exists)
-            w.Header().Set("Content-Type", "application/json")
-            w.WriteHeader(http.StatusConflict)
-            json.NewEncoder(w).Encode(map[string]string{"error": "User already exists"})
-            return
-        }
+		var user User
+		user.Email = email
+		user.Password = string(hashedPassword)
+		user.UserName = name
 
-        // Success case
-        w.Header().Set("Content-Type", "application/json")
-        w.WriteHeader(http.StatusOK)
-        json.NewEncoder(w).Encode(map[string]string{
-            "status": "success",
-            "username": user.UserName,
-        })
-    }
+		err = SaveUserToDb(user)
+		if err != nil {
+			// If there's an error (likely user already exists)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(map[string]string{"error": "User already exists"})
+			return
+		}
+
+		// Success case
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":   "success",
+			"username": user.UserName,
+		})
+	}
 }
 
 func ReadfromDb() []User {
@@ -211,7 +211,7 @@ func ReadfromDb() []User {
 	return users
 }
 
-func SaveUserToDb(user User)error {
+func SaveUserToDb(user User) error {
 	stmt, err := db.DB.Prepare("INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		log.Printf("Error preparing statement: %v", err)
@@ -221,7 +221,7 @@ func SaveUserToDb(user User)error {
 
 	user.CreatedAt = time.Now()
 	_, err = stmt.Exec(user.UserName, user.Email, user.Password, user.CreatedAt)
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	return nil
@@ -245,4 +245,68 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 
+}
+
+func CreatePost(w http.ResponseWriter, r *http.Request) {
+	// Get session ID from the cookie
+	cookie, err := r.Cookie("session")
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Parse the UUID from the cookie
+	sessionID, err := uuid.FromString(cookie.Value)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Validate the session
+	session, valid := store.GetSession(sessionID)
+	if !valid {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// Parse the form data
+	err = r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form data", http.StatusBadRequest)
+		return
+	}
+
+	title := r.FormValue("title")
+	content := r.FormValue("content")
+	categoryIDs := r.Form["categories[]"]
+
+	// Use the user ID from the session
+	userID := session.UserID
+
+	// Insert the new post into the POSTS table
+	postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
+	result, err := db.DB.Exec(postQuery, userID, title, content)
+	if err != nil {
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		return
+	}
+
+	// Get the ID of the newly created post
+	postID, err := result.LastInsertId()
+	if err != nil {
+		http.Error(w, "Failed to retrieve post ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert into the Post_Categories table
+	for _, categoryID := range categoryIDs {
+		_, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
+		if err != nil {
+			http.Error(w, "Failed to associate category with post", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect to the homepage after successful post creation
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
