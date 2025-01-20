@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -18,6 +19,10 @@ import (
 var store = NewSessionStore()
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))
+
+type contextKey string
+
+const userSessionKey contextKey = "userSession"
 
 func encryptPassword(password string) (string, error) {
 	bcryptPassword, error := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -109,7 +114,7 @@ func Middleware(next http.Handler) http.HandlerFunc {
 		}
 
 		// Validate session
-		_, valid := store.GetSession(sessionID)
+		session, valid := store.GetSession(sessionID)
 		if !valid {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
@@ -117,7 +122,10 @@ func Middleware(next http.Handler) http.HandlerFunc {
 
 		// Extend session
 		store.ExtendSession(sessionID)
-		next.ServeHTTP(w, r)
+
+		// Add session data to the request context
+		ctx := context.WithValue(r.Context(), userSessionKey, session)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -244,7 +252,6 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
-
 }
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
