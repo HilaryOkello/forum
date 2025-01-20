@@ -54,9 +54,18 @@ func FetchPosts() ([]Post, error) {
 func fetchPostFromDB(postID string) (*Post, error) {
 	// SQL query to fetch the post.
 	query := `
-		SELECT id, user_id, title, content, created_at
-		FROM posts
-		WHERE id = ?;
+		SELECT 
+			posts.id, 
+			posts.title, 
+			posts.content, 
+			users.username, 
+			posts.created_at
+		FROM 
+			posts
+		INNER JOIN 
+			users ON posts.user_id = users.id
+		WHERE 
+			posts.id = ?;
 	`
 
 	// Variable to hold the fetched post.
@@ -86,8 +95,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
-
-	fmt.Println(post)
 
 	tmpl := template.Must(template.ParseFiles("templates/viewPost.html"))
 	if err := tmpl.Execute(w, post); err != nil {
