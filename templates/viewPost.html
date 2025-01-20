@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Forum - View Post</title>
+    <title>The Forum - The Front Page of the Internet</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
         rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/css/index.css">
 </head>
+
 <body>
     <header class="header" role="banner">
         <a href="/" class="logo">
@@ -23,9 +25,11 @@
         </div>
 
         <div class="nav-right">
+            <a href="/" class="nav-link"></a> <!-- redirect to homepage after successful creation for post. -->
             <button class="create-post-btn" aria-label="Create new post">
                 <a href="/create-post-form">Create-Post</a>
             </button>
+            <div id="notification" class="hidden"></div> <!-- for notification pop-up -->
             <button class="nav-btn" aria-label="Notifications">
                 <i class="far fa-bell" aria-hidden="true"></i>
             </button>
@@ -37,6 +41,7 @@
                     <img src="/static/user.png" alt="User avatar" class="user-avatar" />
                 </button>
                 <div class="user-menu" role="menu">
+                    {{/*
                     {{if .IsLoggedIn}}
                     <span class="welcome-message" role="menuitem">Hi {{.UserName}}</span>
                     <a href="/logout" class="user-menu-item" role="menuitem">
@@ -50,10 +55,12 @@
                         <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
                     </a>
                     {{end}}
+                    */}}
                 </div>
             </div>
         </div>
     </header>
+
     <div class="layout">
         <nav class="left-sidebar" role="navigation">
             <div class="sidebar-section">
@@ -79,6 +86,7 @@
                 <a href="/r/technology" class="sidebar-link"><i class="fas fa-microchip"></i> r/technology</a>
             </div>
         </nav>
+
         <main class="feed" role="main">
             <div class="sort-bar">
                 <button class="sort-btn active" aria-label="Sort by hot">Hot</button>
@@ -88,7 +96,8 @@
                     Controversial
                 </button>
             </div>
-            <div class="post">
+
+            <div class="post" id="post" post-id="{{ .ID}}">
                 <div class="votes">
                     <button class="vote-btn" aria-label="Upvote">
                         <i class="fas fa-thumbs-up" aria-hidden="true"></i>
@@ -99,7 +108,7 @@
                         <i class="fas fa-thumbs-down" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="post">
+                <div class="post-content">
                     <a href="#" class="community-name">Posted by {{.UserName}}</a>
                     <h2 class="post-title">{{.Title}}</h2>
                     <p>{{.Content}}</p>
@@ -110,6 +119,7 @@
                 </div>
             </div>
         </main>
+
         <aside class="right-sidebar" role="complementary">
             <h3 id="trending-title">Trending Today</h3>
             <div class="trending-card" role="article" aria-labelledby="trending-title">
@@ -128,6 +138,7 @@
             </div>
         </aside>
     </div>
+
     <footer class="footer" role="contentinfo">
         <div class="footer-links">
             <a href="/about">About</a>
@@ -137,56 +148,58 @@
         </div>
         <p>2025 MyReddit. All rights reserved.</p>
     </footer>
+
     <script>
         document.querySelectorAll(".vote-btn").forEach((btn) => {
-          btn.addEventListener("click", function () {
-            const voteCount = this.parentElement.querySelector("span");
-            const currentVotes = parseInt(
-              voteCount.textContent.replace("k", "000")
-            );
-            this.parentElement
-              .querySelectorAll(".vote-btn")
-              .forEach((b) => (b.style.color = "#818384"));
-            if (this.textContent === "▲") {
-              voteCount.textContent = currentVotes + 1 + "k";
-              this.style.color = "#FF4500";
-            } else {
-              voteCount.textContent = currentVotes - 1 + "k";
-              this.style.color = "#7193FF";
-            }
-          });
+            btn.addEventListener("click", function () {
+                const voteCount = this.parentElement.querySelector("span");
+                const currentVotes = parseInt(
+                    voteCount.textContent.replace("k", "000")
+                );
+                this.parentElement
+                    .querySelectorAll(".vote-btn")
+                    .forEach((b) => (b.style.color = "#818384"));
+                if (this.textContent === "▲") {
+                    voteCount.textContent = currentVotes + 1 + "k";
+                    this.style.color = "#FF4500";
+                } else {
+                    voteCount.textContent = currentVotes - 1 + "k";
+                    this.style.color = "#7193FF";
+                }
+            });
         });
         document.querySelectorAll(".sort-btn").forEach((btn) => {
-          btn.addEventListener("click", function () {
-            document.querySelector(".sort-btn.active").classList.remove("active");
-            this.classList.add("active");
-          });
+            btn.addEventListener("click", function () {
+                document.querySelector(".sort-btn.active").classList.remove("active");
+                this.classList.add("active");
+            });
         });
         window.addEventListener("load", () => {
-          const layout = document.querySelector(".layout");
-          const updateLayout = () => {
-            const windowWidth = window.innerWidth;
-            const contentWidth = Math.min(1600, windowWidth * 0.95);
-            layout.style.maxWidth = `${contentWidth}px`;
-          };
-          updateLayout();
-          window.addEventListener("resize", updateLayout);
+            const layout = document.querySelector(".layout");
+            const updateLayout = () => {
+                const windowWidth = window.innerWidth;
+                const contentWidth = Math.min(1600, windowWidth * 0.95);
+                layout.style.maxWidth = `${contentWidth}px`;
+            };
+            updateLayout();
+            window.addEventListener("resize", updateLayout);
         });
         const userBtn = document.querySelector(".user-dropdown .nav-btn");
         const userMenu = document.querySelector(".user-menu");
         userBtn.addEventListener("click", (e) => {
-          e.stopPropagation();
-          userMenu.classList.toggle("show");
+            e.stopPropagation();
+            userMenu.classList.toggle("show");
         });
         document.addEventListener("click", (e) => {
-          if (!userMenu.contains(e.target)) {
-            userMenu.classList.remove("show");
-          }
+            if (!userMenu.contains(e.target)) {
+                userMenu.classList.remove("show");
+            }
         });
         userMenu.addEventListener("click", (e) => {
-          e.stopPropagation();
+            e.stopPropagation();
         });
-    </script>    
+    </script>
     <script src="/static/js/index.js"></script>
 </body>
+
 </html>

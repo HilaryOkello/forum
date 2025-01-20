@@ -15,16 +15,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// Get the 'post' div by its ID
-const postDiv = document.getElementById('post');
+// Get all 'post' divs with the class 'post'
+const postDivs = document.querySelectorAll('.post');
 
-postDiv.addEventListener('click', () => {
-  const postId = postDiv.getAttribute('post-id');
+// Add a click event listener to each 'post' div
+postDivs.forEach((postDiv) => {
+  postDiv.addEventListener('click', () => {
+    const postId = postDiv.getAttribute('post-id');
 
-  // Redirect to post/view with the post ID
-  if (postId) {
-    window.location.href = `/view-post?id=${postId}`;
-  } else {
-    console.error('Post ID not found!');
-  }
+    // Redirect to post/view with the post ID
+    if (postId) {
+      window.location.href = `/view-post?id=${postId}`;
+    } else {
+      console.error('Post ID not found!');
+    }
+  });
 });
