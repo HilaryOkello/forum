@@ -95,7 +95,6 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 		finalRootComments[i] = *root
 	}
 
-	fmt.Println(finalRootComments)
 	return finalRootComments, nil
 }
 
