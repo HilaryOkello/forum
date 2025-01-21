@@ -21,7 +21,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	// public routes
-	mux.HandleFunc("/", auth.ServeHomePage)
+	mux.HandleFunc("/posts", post.ServePosts)
+	mux.HandleFunc("/", post.ServeHomePage)
+
 
 	mux.HandleFunc("/login", auth.Login)
 	mux.HandleFunc("/logout", auth.Logout)
