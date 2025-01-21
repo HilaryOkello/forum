@@ -1,35 +1,362 @@
 <!DOCTYPE html>
-	<html lang="en">
-	<head>
-	    <meta charset="UTF-8">
-	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	    <title>Create Post</title>
-        <link rel="stylesheet" href="/static/css/post.css">
-	</head>
-	<body>
-	    <div class="container">
-	        <h2>Create a New Post</h2>
-	        <form action="/create-post" method="POST">
-	            <div class="form-group">
-	                <label for="title">Title:</label>
-	                <input type="text" id="title" name="title" required placeholder="Enter the post title">
-	            </div>
-	            <div class="form-group">
-	                <label for="content">Content:</label>
-	                <textarea id="content" name="content" required placeholder="Write your post content"></textarea>
-	            </div>
-	            <div class="form-group">
-	                <label for="categories">Select Categories:</label>
-	                <select id="categories" name="categories[]" multiple required>
-	                </select>
-	                <small>Hold Ctrl (Windows) or Command (Mac) to select multiple categories.</small>
-	            </div>
-	            <div class="form-group">
-	                <button type="submit">Submit Post</button>
-					<button type="button" onclick="window.location.href='/'" class="cancel-button">Cancel</button>
-	            </div>
-	        </form>
-	    </div>
-        <script src="/static/js/post.js"></script>
-	</body>
-	</html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post</title>
+	<link
+	href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
+	rel="stylesheet"
+  />
+  <link
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+	rel="stylesheet"
+  />
+	<link rel="stylesheet" href="/static/styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        body {
+            background: #030303;
+            color: #D7DADC;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+
+        .post-container {
+            background: #1A1A1B;
+            border: 1px solid #343536;
+            border-radius: 4px;
+        }
+
+        h2 {
+            padding: 20px;
+            border-bottom: 1px solid #343536;
+        }
+
+        .form-group {
+            padding: 20px;
+            border-bottom: 1px solid #343536;
+        }
+
+        .form-group:last-of-type {
+            border-bottom: none;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #818384;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #1A1A1B;
+            border: 1px solid #343536;
+            border-radius: 4px;
+            color: #D7DADC;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #D7DADC;
+            outline: none;
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        select {
+            background: #1A1A1B;
+            min-height: 100px;
+        }
+
+        select option {
+            padding: 8px;
+        }
+
+        small {
+            display: block;
+            margin-top: 8px;
+            color: #818384;
+            font-size: 12px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        button[type="submit"] {
+            background: #D7DADC;
+            border: none;
+            color: #1A1A1B;
+        }
+
+        .cancel-button {
+            background: transparent;
+            border: 1px solid #343536;
+            color: #D7DADC;
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 4px;
+            background: #1A1A1B;
+            border: 1px solid #343536;
+            color: #D7DADC;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-left: 4px solid #46d160;
+        }
+
+        .notification.error {
+            border-left: 4px solid #ff4500;
+        }
+    </style>
+</head>
+<body>
+	<header class="header" role="banner">
+		<a href="/" class="logo">
+		  <i class="fas fa-rocket"></i>
+		  The Forum
+		</a>
+  
+		<div class="search" role="search">
+		  <i class="fas fa-search" aria-hidden="true"></i>
+		  <input
+			type="text"
+			placeholder="Search MyReddit"
+			aria-label="Search posts"
+		  />
+		</div>
+  
+		<div class="nav-right">
+		  <a href="/" class="nav-link">Home</a>  <!-- redirect to homepage after successful creation for post. -->
+		  <!-- <button class="create-post-btn" aria-label="Create new post">
+			<a href="/create-post-form">Create-Post</a>
+		  </button> -->
+		  <div id="notification" class="hidden"></div>  <!-- for notification pop-up -->
+		  <button class="nav-btn" aria-label="Notifications">
+			<i class="far fa-bell" aria-hidden="true"></i>
+		  </button>
+		  <button class="nav-btn" aria-label="Messages">
+			<i class="far fa-comment-alt" aria-hidden="true"></i>
+		  </button>
+		  <div class="user-dropdown">
+			<button class="nav-btn" aria-label="User menu">
+			  <img src="/static/user.png" alt="User avatar" class="user-avatar" />
+			</button>
+			<div class="user-menu" role="menu">
+			  {{if .IsLoggedIn}}
+			  <span class="welcome-message" role="menuitem"
+				>Hi {{.UserName}}</span
+			  >
+			  <a href="/logout" class="user-menu-item" role="menuitem">
+				<i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+			  </a>
+			  {{else}}
+			  <a href="/login" class="user-menu-item" role="menuitem">
+				<i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+			  </a>
+			  <a href="/signup" class="user-menu-item" role="menuitem">
+				<i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
+			  </a>
+			  {{end}}
+			</div>
+		  </div>
+		</div>
+	  </header>
+    <div class="container">
+        <div class="post-container">
+            <h2>Create a New Post</h2>
+            <form action="/create-post" method="POST">
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required placeholder="Enter the post title">
+                </div>
+                
+                <div class="form-group">
+                    <label for="content">Content:</label>
+                    <textarea id="content" name="content" required placeholder="Write your post content"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="categories">Select Categories:</label>
+                    <select id="categories" name="categories[]" multiple required>
+                        <!-- Categories will be populated by JavaScript -->
+                    </select>
+                    <small>Hold Ctrl (Windows) or Command (Mac) to select multiple categories.</small>
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" onclick="window.location.href='/'" class="cancel-button">Cancel</button>
+                    <button type="submit">Submit Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+	<script >
+		document.querySelectorAll(".vote-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const voteCount = this.parentElement.querySelector("span");
+          const currentVotes = parseInt(
+            voteCount.textContent.replace("k", "000")
+          );
+          this.parentElement
+            .querySelectorAll(".vote-btn")
+            .forEach((b) => (b.style.color = "#818384"));
+          if (this.textContent === "▲") {
+            voteCount.textContent = currentVotes + 1 + "k";
+            this.style.color = "#FF4500";
+          } else {
+            voteCount.textContent = currentVotes - 1 + "k";
+            this.style.color = "#7193FF";
+          }
+        });
+      });
+      document.querySelectorAll(".sort-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document.querySelector(".sort-btn.active").classList.remove("active");
+          this.classList.add("active");
+        });
+      });
+      window.addEventListener("load", () => {
+        const layout = document.querySelector(".layout");
+        const updateLayout = () => {
+          const windowWidth = window.innerWidth;
+          const contentWidth = Math.min(1600, windowWidth * 0.95);
+          layout.style.maxWidth = `${contentWidth}px`;
+        };
+        updateLayout();
+        window.addEventListener("resize", updateLayout);
+      });
+      const userBtn = document.querySelector(".user-dropdown .nav-btn");
+      const userMenu = document.querySelector(".user-menu");
+      userBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        userMenu.classList.toggle("show");
+      });
+      document.addEventListener("click", (e) => {
+        if (!userMenu.contains(e.target)) {
+          userMenu.classList.remove("show");
+        }
+      });
+      userMenu.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+	</script>
+    <script>
+        
+        fetch("/categories")
+            .then(response => response.json())
+            .then(categories => {
+                const categoriesSelect = document.getElementById("categories");
+                categories.forEach(category => {
+                    const option = document.createElement("option");
+                    option.value = category.ID;
+                    option.textContent = category.Name;
+                    categoriesSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error fetching categories:", error));
+
+        document.querySelector("form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const title = document.getElementById("title").value;
+            const content = document.getElementById("content").value;
+            const categories = Array.from(document.getElementById("categories").selectedOptions)
+                .map(option => option.value);
+
+            const postData = new URLSearchParams();
+            postData.append("title", title);
+            postData.append("content", content);
+            categories.forEach(category => postData.append("categories[]", category));
+
+            fetch("/create-post", {
+                method: "POST",
+                body: postData,
+            })
+            .then(response => {
+                if (response.redirected) {
+                    showNotification("Post created successfully!");
+                    setTimeout(() => {
+                        window.location.href = response.url;
+                    }, 2000);
+                } else {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.message) {
+                    showNotification(data.message, "error");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showNotification("Failed to create post", "error");
+            });
+        });
+
+        function showNotification(message, type = "success") {
+            const notification = document.createElement("div");
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add("show");
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove("show");
+                setTimeout(() => {
+                    notification.remove();
+                }, 500);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
