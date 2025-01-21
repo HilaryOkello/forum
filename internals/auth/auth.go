@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"forum/db"
-	"forum/internals/post"
+	
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -235,23 +235,25 @@ func SaveUserToDb(user User) error {
 	return nil
 }
 
-// ServeHomePage handles requests to render the homepage
-func ServeHomePage(w http.ResponseWriter, r *http.Request) {
-	posts, err := post.FetchPosts()
+
+
+func CheckIfLoggedIn(w http.ResponseWriter, r *http.Request) string {
+	cookie, err := r.Cookie("session")
 	if err != nil {
-		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
-		return
+		return ""
 	}
-	t, err := template.ParseFiles("./templates/index.html")
+
+	sessionID, err := uuid.FromString(cookie.Value)
 	if err != nil {
-		http.Error(w, "Failed to load template", http.StatusInternalServerError)
-		return
+		return ""
 	}
-	if err := t.Execute(w, map[string]interface{}{
-		"Posts": posts,
-	}); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+
+	session, valid := store.GetSession(sessionID)
+	if !valid {
+		return ""
 	}
+
+	return session.UserName
 }
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
