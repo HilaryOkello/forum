@@ -1,58 +1,64 @@
 .vote-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    color: #555;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
 }
-  
-  .vote-btn:hover {
-    color: #000;
+
+.vote-btn:hover {
+  color: #000;
 }
-  
-  .votes {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-right: 10px;
+
+.votes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
 }
-  
-  .post-content {
-    flex: 1;
+
+.post-content {
+  flex: 1;
 }
-  
-  .post, .view-post {
-    display: flex;
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
- 
-.comment {
-  margin: 10px 0;
+
+.post,
+.view-post {
+  display: flex;
+  margin-bottom: 20px;
   padding: 10px;
+  border: 1px solid #ccc;
   border-radius: 5px;
 }
 
-.comment .comment-header {
-  font-weight: bold;
+.comment {
+  margin: 10px 0;
+  border-radius: 5px;
   margin-bottom: 5px;
 }
 
-.comment .comment-content {
+.comment-header {
+  font-size: 1rem;
+  color: #ccc;
+  font-weight: lighter;
+}
+
+.comment-content {
+  font-size: 1.2rem;
+  font-weight: 500;
   margin-bottom: 10px;
 }
 
 .reply-btn {
   border: none;
   border-radius: 5px;
-  padding: 5px 10px;
+  padding: 2.5px 5px;
+  background-color: grey;
   cursor: pointer;
 }
 
 .replies {
-  margin-left: 20px; /* Indent for nested replies */
+  margin-left: 20px;
+  /* Indent for nested replies */
   padding-left: 10px;
 }

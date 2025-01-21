@@ -75,8 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const commentsList = document.getElementById("comments-list");
                 commentsList.innerHTML = ""; // Clear existing comments
 
+                const MAX_NESTING_LEVEL = 3; // Maximum nesting level
+
                 // Function to render comments and replies recursively
-                const renderComment = (commentData, parentElement) => {
+                const renderComment = (commentData, parentElement, level = 1) => {
                     const comment = document.createElement("div");
                     comment.classList.add("comment");
                     comment.id = `comment-${commentData.id}`;
@@ -88,59 +90,61 @@ document.addEventListener("DOMContentLoaded", () => {
                         <p class="comment-content">${commentData.content}</p>
                     `;
 
-                    // Add reply button
-                    const replyButton = document.createElement("button");
-                    replyButton.textContent = "Reply";
-                    replyButton.classList.add("reply-btn");
-                    replyButton.addEventListener("click", () => {
-                        const existingReplyForm = comment.querySelector(".reply-form");
-                        if (existingReplyForm) {
-                            existingReplyForm.remove();
-                        } else {
-                            const replyForm = document.createElement("div");
-                            replyForm.classList.add("reply-form");
-                            replyForm.innerHTML = `
-                                <textarea placeholder="Write your reply..."></textarea>
-                                <button class="submit-reply">Submit Reply</button>
-                                <button class="cancel-reply">Cancel</button>
-                            `;
-                            replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
-                            replyForm.querySelector(".submit-reply").addEventListener("click", () => {
-                                const replyContent = replyForm.querySelector("textarea").value;
-                                fetch(`/comments/create`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({
-                                        post_id: Number(postID),
-                                        parent_id: commentData.id,
-                                        user_id: 1, // Replace with logged-in user's ID
-                                        content: replyContent,
-                                    }),
-                                })
-                                    .then((response) => response.json())
-                                    .then((data) => {
-                                        if (data.status === "success") {
-                                            replyForm.remove();
-                                            // Optionally re-fetch or dynamically add the new reply
-                                        } else {
-                                            alert("Failed to post reply.");
-                                        }
-                                    });
-                            });
-                            comment.appendChild(replyForm);
-                        }
-                    });
-                    comment.appendChild(replyButton);
+                    // Add reply button only if nesting level is below the limit
+                    if (level < MAX_NESTING_LEVEL) {
+                        const replyButton = document.createElement("button");
+                        replyButton.textContent = "Reply";
+                        replyButton.classList.add("reply-btn");
+                        replyButton.addEventListener("click", () => {
+                            const existingReplyForm = comment.querySelector(".reply-form");
+                            if (existingReplyForm) {
+                                existingReplyForm.remove();
+                            } else {
+                                const replyForm = document.createElement("div");
+                                replyForm.classList.add("reply-form");
+                                replyForm.innerHTML = `
+                                    <textarea placeholder="Write your reply..."></textarea>
+                                    <button class="submit-reply">Submit Reply</button>
+                                    <button class="cancel-reply">Cancel</button>
+                                `;
+                                replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
+                                replyForm.querySelector(".submit-reply").addEventListener("click", () => {
+                                    const replyContent = replyForm.querySelector("textarea").value;
+                                    fetch(`/comments/create`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            post_id: Number(postID),
+                                            parent_id: commentData.id,
+                                            user_id: 1, // Replace with logged-in user's ID
+                                            content: replyContent,
+                                        }),
+                                    })
+                                        .then((response) => response.json())
+                                        .then((data) => {
+                                            if (data.status === "success") {
+                                                replyForm.remove();
+                                                // Optionally re-fetch or dynamically add the new reply
+                                            } else {
+                                                alert("Failed to post reply.");
+                                            }
+                                        });
+                                });
+                                comment.appendChild(replyForm);
+                            }
+                        });
+                        comment.appendChild(replyButton);
+                    }
 
                     // Append the comment to the parent element
                     parentElement.appendChild(comment);
 
-                    // Handle children (nested replies)
-                    if (commentData.children && commentData.children.length > 0) {
+                    // Handle children (nested replies) recursively
+                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
                         const repliesContainer = document.createElement("div");
                         repliesContainer.classList.add("replies");
                         commentData.children.forEach((childComment) => {
-                            renderComment(childComment, repliesContainer);
+                            renderComment(childComment, repliesContainer, level + 1);
                         });
                         parentElement.appendChild(repliesContainer);
                     }
