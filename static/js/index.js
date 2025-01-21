@@ -1,17 +1,17 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const voteButtons = document.querySelectorAll(".vote-btn");
+    const voteButtons = document.querySelectorAll(".vote-btn");
 
-  voteButtons.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const isUpvote = e.target.classList.contains("fa-thumbs-up");
-      const voteCountSpan = e.target.parentElement.nextElementSibling;
+    voteButtons.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+            const isUpvote = e.target.classList.contains("fa-thumbs-up");
+            const voteCountSpan = e.target.parentElement.nextElementSibling;
 
-      let voteCount = parseInt(voteCountSpan.textContent) || 0;
-      voteCount = isUpvote ? voteCount + 1 : voteCount - 1;
+            let voteCount = parseInt(voteCountSpan.textContent) || 0;
+            voteCount = isUpvote ? voteCount + 1 : voteCount - 1;
 
-      voteCountSpan.textContent = voteCount;
+            voteCountSpan.textContent = voteCount;
+        });
     });
-  });
 });
 
 
@@ -20,16 +20,16 @@ const postDivs = document.querySelectorAll('.post');
 
 // Add a click event listener to each 'post' div
 postDivs.forEach((postDiv) => {
-  postDiv.addEventListener('click', () => {
-    const postId = postDiv.getAttribute('post-id');
+    postDiv.addEventListener('click', () => {
+        const postId = postDiv.getAttribute('post-id');
 
-    // Redirect to post/view with the post ID
-    if (postId) {
-      window.location.href = `/view-post?id=${postId}`;
-    } else {
-      console.error('Post ID not found!');
-    }
-  });
+        // Redirect to post/view with the post ID
+        if (postId) {
+            window.location.href = `/view-post?id=${postId}`;
+        } else {
+            console.error('Post ID not found!');
+        }
+    });
 });
 
 const commentForm = document.getElementById("comment-form");
@@ -61,83 +61,114 @@ commentForm.addEventListener("submit", (event) => {
                 alert("Failed to post comment.");
             }
         });
-        
+
 });
 
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Handling comment reply functionality
-  const commentsList = document.getElementById("comments-list");
+    const viewPostContainer = document.getElementById("view-post");
+    if (viewPostContainer) {
+        const postID = viewPostContainer.getAttribute("post-id");
 
-  const createReplyForm = (commentId) => {
-      const replyForm = document.createElement("div");
-      replyForm.classList.add("reply-form");
-      replyForm.innerHTML = `
-          <textarea placeholder="Write your reply..."></textarea>
-          <button class="submit-reply">Submit Reply</button>
-          <button class="cancel-reply">Cancel</button>
-      `;
-      
-      const cancelBtn = replyForm.querySelector(".cancel-reply");
-      const submitBtn = replyForm.querySelector(".submit-reply");
+        fetch(`/comments?post_id=${postID}`)
+            .then((response) => response.json())
+            .then((data) => {
+                const commentsList = document.getElementById("comments-list");
+                commentsList.innerHTML = ""; // Clear existing comments
 
-      cancelBtn.addEventListener("click", () => {
-          replyForm.remove();
-      });
+                const MAX_NESTING_LEVEL = 3; // Maximum nesting level
 
-      submitBtn.addEventListener("click", () => {
-          // Submit reply logic (e.g., send reply to server)
-          alert("Reply submitted");
-          replyForm.remove();
-      });
+                // Function to render comments and replies recursively
+                const renderComment = (commentData, parentElement, level = 1) => {
+                    const comment = document.createElement("div");
+                    comment.classList.add("comment");
+                    comment.id = `comment-${commentData.id}`;
+                    comment.innerHTML = `
+                        <div class="comment-header">
+                            <span class="comment-author">${commentData.username}</span>
+                            <span class="comment-time">${new Date(commentData.created_at).toLocaleString()}</span>
+                        </div>
+                        <p class="comment-content">${commentData.content}</p>
+                    `;
 
-      return replyForm;
-  };
+                    // Add reply button only if nesting level is below the limit
+                    if (level < MAX_NESTING_LEVEL) {
+                        const replyButton = document.createElement("button");
+                        replyButton.textContent = "Reply";
+                        replyButton.classList.add("reply-btn");
+                        replyButton.addEventListener("click", () => {
+                            const existingReplyForm = comment.querySelector(".reply-form");
+                            if (existingReplyForm) {
+                                existingReplyForm.remove();
+                            } else {
+                                const replyForm = document.createElement("div");
+                                replyForm.classList.add("reply-form");
+                                replyForm.innerHTML = `
+                                    <textarea placeholder="Write your reply..."></textarea>
+                                    <button class="submit-reply">Submit Reply</button>
+                                    <button class="cancel-reply">Cancel</button>
+                                `;
+                                replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
+                                replyForm.querySelector(".submit-reply").addEventListener("click", () => {
+                                    const replyContent = replyForm.querySelector("textarea").value;
+                                    fetch(`/comments/create`, {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                            post_id: Number(postID),
+                                            parent_id: commentData.id,
+                                            user_id: 1, // Replace with logged-in user's ID
+                                            content: replyContent,
+                                        }),
+                                    })
+                                        .then((response) => response.json())
+                                        .then((data) => {
+                                            if (data.status === "success") {
+                                                replyForm.remove();
+                                                // Optionally re-fetch or dynamically add the new reply
+                                            } else {
+                                                alert("Failed to post reply.");
+                                            }
+                                        });
+                                });
+                                comment.appendChild(replyForm);
+                            }
+                        });
+                        comment.appendChild(replyButton);
+                    }
 
-  // Add reply button for each comment
-  const addReplyButton = (comment) => {
-      const replyButton = document.createElement("button");
-      replyButton.textContent = "Reply";
-      replyButton.classList.add("reply-btn");
+                    // Create a container for replies (initially hidden)
+                    const repliesContainer = document.createElement("div");
+                    repliesContainer.classList.add("replies-container");
+                    repliesContainer.style.display = "none"; // Hide replies initially
 
-      replyButton.addEventListener("click", () => {
-          const existingReplyForm = comment.querySelector(".reply-form");
-          if (existingReplyForm) {
-              existingReplyForm.remove(); // If a reply form already exists, remove it
-          } else {
-              const replyForm = createReplyForm(comment.id); // Create a new reply form
-              comment.appendChild(replyForm); // Add the reply form below the comment
-          }
-      });
+                    // Handle children (nested replies) recursively
+                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
+                        commentData.children.forEach((childComment) => {
+                            renderComment(childComment, repliesContainer, level + 1);
+                        });
+                    }
 
-      return replyButton;
-  };
+                    // Add "View Replies" button only if nesting level is below the maximum
+                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
+                        const viewRepliesButton = document.createElement("button");
+                        viewRepliesButton.textContent = "View Replies";
+                        viewRepliesButton.classList.add("view-replies-btn");
+                        viewRepliesButton.addEventListener("click", () => {
+                            const isHidden = repliesContainer.style.display === "none";
+                            repliesContainer.style.display = isHidden ? "block" : "none";
+                            viewRepliesButton.textContent = isHidden ? "Hide Replies" : "View Replies";
+                        });
+                        comment.appendChild(viewRepliesButton);
+                    }
 
-  // Example comment rendering (you should loop through actual comments from your data)
-  const renderComment = (commentData) => {
-      const comment = document.createElement("div");
-      comment.classList.add("comment");
-      comment.id = `comment-${commentData.id}`;
-      comment.innerHTML = `
-          <div class="comment-header">
-              <span class="comment-author">${commentData.author}</span>
-              <span class="comment-time">${commentData.time}</span>
-          </div>
-          <p class="comment-content">${commentData.content}</p>
-      `;
+                    // Append the comment to the parent element
+                    parentElement.appendChild(comment);
+                    parentElement.appendChild(repliesContainer); // Append the replies container
+                };
 
-      // Append the reply button to each comment
-      const replyButton = addReplyButton(comment);
-      comment.appendChild(replyButton);
-
-      commentsList.appendChild(comment);
-  };
-
-  // Example of adding comments
-  const exampleComments = [
-      { id: 1, author: "User1", time: "2 hours ago", content: "This is a comment." },
-      { id: 2, author: "User2", time: "1 hour ago", content: "This is another comment." }
-  ];
-
-  exampleComments.forEach(renderComment);
+                // Render all root comments
+                data.forEach((comment) => renderComment(comment, commentsList));
+            })
+            .catch((error) => console.error("Error fetching comments:", error));
+    }
 });
