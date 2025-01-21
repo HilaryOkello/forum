@@ -49,7 +49,8 @@
   margin-bottom: 10px;
 }
 
-.reply-btn {
+.reply-btn, .view-replies-btn {
+  margin-right: 20px;
   border: none;
   border-radius: 5px;
   padding: 2.5px 5px;
@@ -57,7 +58,7 @@
   cursor: pointer;
 }
 
-.replies {
+.replies-container {
   margin-left: 20px;
   /* Indent for nested replies */
   padding-left: 10px;

@@ -136,18 +136,34 @@ document.addEventListener("DOMContentLoaded", () => {
                         comment.appendChild(replyButton);
                     }
 
-                    // Append the comment to the parent element
-                    parentElement.appendChild(comment);
+                    // Create a container for replies (initially hidden)
+                    const repliesContainer = document.createElement("div");
+                    repliesContainer.classList.add("replies-container");
+                    repliesContainer.style.display = "none"; // Hide replies initially
 
                     // Handle children (nested replies) recursively
                     if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
-                        const repliesContainer = document.createElement("div");
-                        repliesContainer.classList.add("replies");
                         commentData.children.forEach((childComment) => {
                             renderComment(childComment, repliesContainer, level + 1);
                         });
-                        parentElement.appendChild(repliesContainer);
                     }
+
+                    // Add "View Replies" button only if nesting level is below the maximum
+                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
+                        const viewRepliesButton = document.createElement("button");
+                        viewRepliesButton.textContent = "View Replies";
+                        viewRepliesButton.classList.add("view-replies-btn");
+                        viewRepliesButton.addEventListener("click", () => {
+                            const isHidden = repliesContainer.style.display === "none";
+                            repliesContainer.style.display = isHidden ? "block" : "none";
+                            viewRepliesButton.textContent = isHidden ? "Hide Replies" : "View Replies";
+                        });
+                        comment.appendChild(viewRepliesButton);
+                    }
+
+                    // Append the comment to the parent element
+                    parentElement.appendChild(comment);
+                    parentElement.appendChild(repliesContainer); // Append the replies container
                 };
 
                 // Render all root comments
@@ -156,8 +172,3 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch((error) => console.error("Error fetching comments:", error));
     }
 });
-
-
-
-
-
