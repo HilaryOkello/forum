@@ -65,6 +65,8 @@ commentForm.addEventListener("submit", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    const commentCount = document.getElementById("comment-count");
+
     const viewPostContainer = document.getElementById("view-post");
     if (viewPostContainer) {
         const postID = viewPostContainer.getAttribute("post-id");
@@ -76,6 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 commentsList.innerHTML = ""; // Clear existing comments
 
                 const MAX_NESTING_LEVEL = 3; // Maximum nesting level
+                commentCount.textContent = `${data.length} comments` ;
 
                 // Function to render comments and replies recursively
                 const renderComment = (commentData, parentElement, level = 1) => {
@@ -151,12 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     // Add "View Replies" button only if nesting level is below the maximum
                     if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
                         const viewRepliesButton = document.createElement("button");
-                        viewRepliesButton.textContent = "View Replies";
+                        viewRepliesButton.textContent = `+ ${commentData.children.length} Replies`;
                         viewRepliesButton.classList.add("view-replies-btn");
                         viewRepliesButton.addEventListener("click", () => {
                             const isHidden = repliesContainer.style.display === "none";
                             repliesContainer.style.display = isHidden ? "block" : "none";
-                            viewRepliesButton.textContent = isHidden ? "Hide Replies" : "View Replies";
+                            let ttl =`+ ${commentData.children.length} Replies`
+                            viewRepliesButton.textContent = isHidden ? "Hide Replies" : ttl;
                         });
                         comment.appendChild(viewRepliesButton);
                     }
