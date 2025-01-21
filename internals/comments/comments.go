@@ -97,14 +97,16 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	// Decode the request body into the input struct
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		fmt.Println(err.Error())
-		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
-		return
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "failure",
+		})
 	}
 
 	var id int64
 	var createdAt string
 
-	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, createdAt`
+	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, created_at`
 
 	// Execute the query and scan the result into the id and createdAt variables
 	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, input.UserID).Scan(&id, &createdAt)
@@ -115,9 +117,8 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		ID        int64  `json:"id"`
-		CreatedAt string `json:"created_at"`
-	}{id, createdAt}
+		Status string `json:"status"`
+	}{Status: "success"}
 
 	json.NewEncoder(w).Encode(response)
 }
