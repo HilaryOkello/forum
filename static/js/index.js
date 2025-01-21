@@ -65,22 +65,17 @@ commentForm.addEventListener("submit", (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Check if we are on the viewPost page by looking for a unique element
     const viewPostContainer = document.getElementById("view-post");
     if (viewPostContainer) {
-        // Fetch post ID from the viewPost container
         const postID = viewPostContainer.getAttribute("post-id");
 
-        // Send a request to fetch all comments for this post
         fetch(`/comments?post_id=${postID}`)
             .then((response) => response.json())
             .then((data) => {
                 const commentsList = document.getElementById("comments-list");
+                commentsList.innerHTML = ""; // Clear existing comments
 
-                // Clear existing comments (if any)
-                commentsList.innerHTML = "";
-
-                // Function to recursively render comments and their replies
+                // Function to render comments and replies recursively
                 const renderComment = (commentData, parentElement) => {
                     const comment = document.createElement("div");
                     comment.classList.add("comment");
@@ -109,11 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <button class="submit-reply">Submit Reply</button>
                                 <button class="cancel-reply">Cancel</button>
                             `;
-                            const cancelBtn = replyForm.querySelector(".cancel-reply");
-                            cancelBtn.addEventListener("click", () => replyForm.remove());
-                            const submitBtn = replyForm.querySelector(".submit-reply");
-                            submitBtn.addEventListener("click", () => {
-                                // Logic to submit a reply
+                            replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
+                            replyForm.querySelector(".submit-reply").addEventListener("click", () => {
                                 const replyContent = replyForm.querySelector("textarea").value;
                                 fetch(`/comments/create`, {
                                     method: "POST",
@@ -129,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     .then((data) => {
                                         if (data.status === "success") {
                                             replyForm.remove();
-                                            // Optionally re-fetch comments or add the new reply dynamically
+                                            // Optionally re-fetch or dynamically add the new reply
                                         } else {
                                             alert("Failed to post reply.");
                                         }
@@ -140,16 +132,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     comment.appendChild(replyButton);
 
-                    // Append comment to the parent element
+                    // Append the comment to the parent element
                     parentElement.appendChild(comment);
 
-                    // Render children (replies) recursively
+                    // Handle children (nested replies)
                     if (commentData.children && commentData.children.length > 0) {
                         const repliesContainer = document.createElement("div");
                         repliesContainer.classList.add("replies");
-                        commentData.children.forEach((childComment) =>
-                            renderComment(childComment, repliesContainer)
-                        );
+                        commentData.children.forEach((childComment) => {
+                            renderComment(childComment, repliesContainer);
+                        });
                         parentElement.appendChild(repliesContainer);
                     }
                 };
@@ -160,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch((error) => console.error("Error fetching comments:", error));
     }
 });
+
 
 
 

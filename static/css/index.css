@@ -29,4 +29,30 @@
     border: 1px solid #ccc;
     border-radius: 5px;
 }
-  
+ 
+.comment {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.comment .comment-header {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.comment .comment-content {
+  margin-bottom: 10px;
+}
+
+.reply-btn {
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.replies {
+  margin-left: 20px; /* Indent for nested replies */
+  padding-left: 10px;
+}
