@@ -48,18 +48,16 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	defer rows.Close()
 
 	commentMap := make(map[int64]*Comment)
-	var rootComments []Comment
+	var rootComments []*Comment
 
-	// Iterate over the rows and create a map of comments
+	// First pass: load all comments into the map
 	for rows.Next() {
 		var comment Comment
 		var ParentID *int64
 
-		// Scan the row into the comment struct
 		err := rows.Scan(
 			&comment.ID, &comment.PostID, &comment.UserID, &ParentID,
 			&comment.Content, &comment.CreatedAt, &comment.Username,
@@ -69,20 +67,36 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 			return nil, err
 		}
 
+		// Add the parent ID
+		comment.ParentID = ParentID
+
+		// Add the comment to the map and a temporary list
 		commentMap[comment.ID] = &comment
 
-		// If the ParentID is nil, it means it's a root comment
+		// If the comment has no parent, it's a root comment
 		if ParentID == nil {
-			rootComments = append(rootComments, comment)
-		} else {
-			parent := commentMap[*ParentID]
+			rootComments = append(rootComments, &comment)
+		}
+	}
+
+	// Second pass: build the hierarchy
+	for _, comment := range commentMap {
+		if comment.ParentID != nil {
+			parent := commentMap[*comment.ParentID]
 			if parent != nil {
 				parent.Children = append(parent.Children, comment)
 			}
 		}
-
 	}
-	return rootComments, nil
+
+	// Convert root comments from []*Comment to []Comment for the return type
+	finalRootComments := make([]Comment, len(rootComments))
+	for i, root := range rootComments {
+		finalRootComments[i] = *root
+	}
+
+	fmt.Println(finalRootComments)
+	return finalRootComments, nil
 }
 
 // CreateComment creates a new comment

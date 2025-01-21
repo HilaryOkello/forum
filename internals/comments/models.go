@@ -11,7 +11,7 @@ type Comment struct {
 	Username  string    `json:"username"`
 	Likes     int       `json:"likes"`
 	Dislikes  int       `json:"dislikes"`
-	Children  []Comment `json:"children,omitempty"`
+	Children  []*Comment `json:"children,omitempty"`
 }
 
 // CommentInput represents the input for creating a comment
