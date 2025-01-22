@@ -169,8 +169,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         viewRepliesBtn = document.createElement("button");
                         viewRepliesBtn.classList.add("view-replies-btn");
                         comment.appendChild(viewRepliesBtn)
+                        // Add click event listener
+                        viewRepliesBtn.addEventListener("click", () => {
+                            const repliesContainer = comment.nextElementSibling;
+                            const isHidden = repliesContainer.style.display === "none";
+                            repliesContainer.style.display = isHidden ? "block" : "none";
+                            viewRepliesBtn.textContent = isHidden ? "Hide Replies" : `+ ${repliesContainer.children.length} Replies`;
+                        });
                     }
-                    viewRepliesBtn.textContent = "Hide Replies"
+                    viewRepliesBtn.textContent = "Hide Replies";
                     replyForm.remove();
                 } else {
                     alert("Failed to post reply.");
