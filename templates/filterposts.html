@@ -4,16 +4,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Forum - The Front Page of the Internet</title>
+    <title>The Forum - Filtered Posts</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
         rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/css/temp.css">
-    <style>
-
-
-    </style>
+    <link rel="stylesheet" href="/static/css/index.css">
 </head>
 
 <body>
@@ -101,13 +97,14 @@
                 </button>
             </div>
 
-            <div class="view-post" id="view-post" post-id="{{ .ID}}">
+            <!-- Displaying filtered posts -->
+            {{range .Posts}}
+            <div class="view-post" id="view-post-{{.ID}}" post-id="{{.ID}}">
                 <div class="votes">
                     <button class="vote-btn" aria-label="Upvote">
                         <i class="fas fa-thumbs-up" aria-hidden="true"></i>
                     </button>
                     <span>--</span>
-                    <!-- Placeholder for vote count -->
                     <button class="vote-btn" aria-label="Downvote">
                         <i class="fas fa-thumbs-down" aria-hidden="true"></i>
                     </button>
@@ -117,13 +114,13 @@
                     <h2 class="post-title">{{.Title}}</h2>
                     <p>{{.Content}}</p>
                     <div class="post-meta">
-                        <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 
-                        </a>
+                        <a href="#" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 0
+                            comments</a>
                     </div>
                     <div id="comments-section">
                         <form id="comment-form">
                             <textarea id="comment-content" placeholder="Write your comment..."></textarea>
-                            <button class="btn btn-primary" type="submit">Comment</button>
+                            <button type="submit">Post Comment</button>
                         </form>
 
                         <h3>Comments</h3>
@@ -131,6 +128,9 @@
                     </div>
                 </div>
             </div>
+            {{else}}
+            <p>No posts found in this category.</p>
+            {{end}}
         </main>
 
         <aside class="right-sidebar" role="complementary">
