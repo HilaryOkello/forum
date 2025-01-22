@@ -66,113 +66,135 @@ commentForm.addEventListener("submit", (event) => {
 
 document.addEventListener("DOMContentLoaded", () => {
     const commentCount = document.getElementById("comment-count");
-
     const viewPostContainer = document.getElementById("view-post");
-    if (viewPostContainer) {
-        const postID = viewPostContainer.getAttribute("post-id");
 
-        fetch(`/comments?post_id=${postID}`)
+    if (!viewPostContainer) return;
+
+    const postID = viewPostContainer.getAttribute("post-id");
+    const MAX_NESTING_LEVEL = 3;
+
+    const fetchComments = async (postID) => {
+        try {
+            const response = await fetch(`/comments?post_id=${postID}`);
+            return await response.json();
+        } catch (error) {
+            console.error("Error fetching comments:", error);
+            return [];
+        }
+    };
+
+    const createCommentElement = (commentData, level, postID) => {
+        const comment = document.createElement("div");
+        comment.classList.add("comment");
+        comment.id = `comment-${commentData.id}`;
+        comment.innerHTML = `
+            <div class="comment-header">
+                <span class="comment-author">${commentData.username}</span>
+                <span class="comment-time">${new Date(commentData.created_at).toLocaleString()}</span>
+            </div>
+            <p class="comment-content">${commentData.content}</p>
+        `;
+        if (level < MAX_NESTING_LEVEL) addReplyButton(comment, commentData, postID, level);
+        return comment;
+    };
+
+    const addReplyButton = (comment, commentData, postID, level) => {
+        const replyButton = document.createElement("button");
+        replyButton.textContent = "Reply";
+        replyButton.classList.add("reply-btn");
+        replyButton.addEventListener("click", () => toggleReplyForm(comment, commentData, postID));
+        comment.appendChild(replyButton);
+    };
+
+    const toggleReplyForm = (comment, commentData, postID) => {
+        const existingReplyForm = comment.querySelector(".reply-form");
+        if (existingReplyForm) {
+            existingReplyForm.remove();
+        } else {
+            const replyForm = document.createElement("div");
+            replyForm.classList.add("reply-form");
+            replyForm.innerHTML = `
+                <textarea placeholder="Write your reply..."></textarea>
+                <button class="submit-reply">Submit Reply</button>
+                <button class="cancel-reply">Cancel</button>
+            `;
+            replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
+            replyForm.querySelector(".submit-reply").addEventListener("click", () => submitReply(replyForm, commentData, postID));
+            comment.appendChild(replyForm);
+        }
+    };
+
+    const submitReply = (replyForm, commentData, postID) => {
+        const replyContent = replyForm.querySelector("textarea").value;
+        fetch(`/comments/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                post_id: Number(postID),
+                parent_id: commentData.id,
+                user_id: 1, // Replace with logged-in user's ID
+                content: replyContent,
+            }),
+        })
             .then((response) => response.json())
             .then((data) => {
-                const commentsList = document.getElementById("comments-list");
-                commentsList.innerHTML = ""; // Clear existing comments
+                if (data.status === "success") {
+                    replyForm.remove();
+                    // Optionally re-fetch or dynamically add the new reply
+                } else {
+                    alert("Failed to post reply.");
+                }
+            });
+    };
 
-                const MAX_NESTING_LEVEL = 3; // Maximum nesting level
-                commentCount.textContent = `${data.length} comments` ;
+    const renderReplies = (commentData, repliesContainer, level, postID) => {
+        if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
+            commentData.children.forEach((childComment) => {
+                renderComment(childComment, repliesContainer, level + 1, postID);
+            });
+        }
+    };
 
-                // Function to render comments and replies recursively
-                const renderComment = (commentData, parentElement, level = 1) => {
-                    const comment = document.createElement("div");
-                    comment.classList.add("comment");
-                    comment.id = `comment-${commentData.id}`;
-                    comment.innerHTML = `
-                        <div class="comment-header">
-                            <span class="comment-author">${commentData.username}</span>
-                            <span class="comment-time">${new Date(commentData.created_at).toLocaleString()}</span>
-                        </div>
-                        <p class="comment-content">${commentData.content}</p>
-                    `;
+    const addViewRepliesButton = (comment, repliesContainer, commentData) => {
+        if (commentData.children && commentData.children.length > 0) {
+            const viewRepliesButton = document.createElement("button");
+            viewRepliesButton.textContent = `+ ${commentData.children.length} Replies`;
+            viewRepliesButton.classList.add("view-replies-btn");
+            viewRepliesButton.addEventListener("click", () => {
+                const isHidden = repliesContainer.style.display === "none";
+                repliesContainer.style.display = isHidden ? "block" : "none";
+                viewRepliesButton.textContent = isHidden
+                    ? "Hide Replies"
+                    : `+ ${commentData.children.length} Replies`;
+            });
+            comment.appendChild(viewRepliesButton);
+        }
+    };
 
-                    // Add reply button only if nesting level is below the limit
-                    if (level < MAX_NESTING_LEVEL) {
-                        const replyButton = document.createElement("button");
-                        replyButton.textContent = "Reply";
-                        replyButton.classList.add("reply-btn");
-                        replyButton.addEventListener("click", () => {
-                            const existingReplyForm = comment.querySelector(".reply-form");
-                            if (existingReplyForm) {
-                                existingReplyForm.remove();
-                            } else {
-                                const replyForm = document.createElement("div");
-                                replyForm.classList.add("reply-form");
-                                replyForm.innerHTML = `
-                                    <textarea placeholder="Write your reply..."></textarea>
-                                    <button class="submit-reply">Submit Reply</button>
-                                    <button class="cancel-reply">Cancel</button>
-                                `;
-                                replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
-                                replyForm.querySelector(".submit-reply").addEventListener("click", () => {
-                                    const replyContent = replyForm.querySelector("textarea").value;
-                                    fetch(`/comments/create`, {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                            post_id: Number(postID),
-                                            parent_id: commentData.id,
-                                            user_id: 1, // Replace with logged-in user's ID
-                                            content: replyContent,
-                                        }),
-                                    })
-                                        .then((response) => response.json())
-                                        .then((data) => {
-                                            if (data.status === "success") {
-                                                replyForm.remove();
-                                                // Optionally re-fetch or dynamically add the new reply
-                                            } else {
-                                                alert("Failed to post reply.");
-                                            }
-                                        });
-                                });
-                                comment.appendChild(replyForm);
-                            }
-                        });
-                        comment.appendChild(replyButton);
-                    }
+    const renderComment = (commentData, parentElement, level, postID) => {
+        const comment = createCommentElement(commentData, level, postID);
+        const repliesContainer = document.createElement("div");
+        repliesContainer.classList.add("replies-container");
+        repliesContainer.style.display = "none";
 
-                    // Create a container for replies (initially hidden)
-                    const repliesContainer = document.createElement("div");
-                    repliesContainer.classList.add("replies-container");
-                    repliesContainer.style.display = "none"; // Hide replies initially
+        renderReplies(commentData, repliesContainer, level, postID);
+        addViewRepliesButton(comment, repliesContainer, commentData);
 
-                    // Handle children (nested replies) recursively
-                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
-                        commentData.children.forEach((childComment) => {
-                            renderComment(childComment, repliesContainer, level + 1);
-                        });
-                    }
+        parentElement.appendChild(comment);
+        parentElement.appendChild(repliesContainer);
+    };
 
-                    // Add "View Replies" button only if nesting level is below the maximum
-                    if (commentData.children && commentData.children.length > 0 && level < MAX_NESTING_LEVEL) {
-                        const viewRepliesButton = document.createElement("button");
-                        viewRepliesButton.textContent = `+ ${commentData.children.length} Replies`;
-                        viewRepliesButton.classList.add("view-replies-btn");
-                        viewRepliesButton.addEventListener("click", () => {
-                            const isHidden = repliesContainer.style.display === "none";
-                            repliesContainer.style.display = isHidden ? "block" : "none";
-                            let ttl =`+ ${commentData.children.length} Replies`
-                            viewRepliesButton.textContent = isHidden ? "Hide Replies" : ttl;
-                        });
-                        comment.appendChild(viewRepliesButton);
-                    }
+    const displayComments = (comments, commentsList, postID) => {
+        commentsList.innerHTML = ""; // Clear existing comments
+        commentCount.textContent = `${comments.length} comments`;
+        comments.forEach((comment) => renderComment(comment, commentsList, 1, postID));
+    };
 
-                    // Append the comment to the parent element
-                    parentElement.appendChild(comment);
-                    parentElement.appendChild(repliesContainer); // Append the replies container
-                };
+    const init = async () => {
+        const commentsList = document.getElementById("comments-list");
+        const comments = await fetchComments(postID);
+        displayComments(comments, commentsList, postID);
+    };
 
-                // Render all root comments
-                data.forEach((comment) => renderComment(comment, commentsList));
-            })
-            .catch((error) => console.error("Error fetching comments:", error));
-    }
+    init();
 });
