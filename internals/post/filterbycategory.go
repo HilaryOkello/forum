@@ -48,3 +48,37 @@ func FetchPostsByCategory(category string) ([]Post, error) {
 	return posts, nil
 }
 
+// ViewPostsByCategory filters posts based on category and renders the filtered posts in a new template.
+func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
+    // Retrieve the category from the query parameter
+    category := r.URL.Query().Get("name")
+
+    if category == "" {
+        http.Error(w, "Category is required", http.StatusBadRequest)
+        return
+    }
+
+    // Fetch the posts for the given category
+    posts, err := FetchPostsByCategory(category)
+    if err != nil {
+        http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+        return
+    }
+
+    // Prepare the data to be passed to the template
+    data := struct {
+        Category string
+        Posts    []Post
+    }{
+        Category: category,
+        Posts:    posts,
+    }
+
+    // Parse and execute the filteredPosts.html template
+    tmpl := template.Must(template.ParseFiles("templates/filterposts.html"))
+    if err := tmpl.Execute(w, data); err != nil {
+        http.Error(w, "Failed to render template", http.StatusInternalServerError)
+        fmt.Println("Template execution error:", err)
+    }
+}
+
