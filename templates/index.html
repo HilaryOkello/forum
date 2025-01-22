@@ -47,9 +47,9 @@
             <img src="/static/user.png" alt="User avatar" class="user-avatar" />
           </button>
           <div class="user-menu" role="menu">
-            {{if .IsLoggedIn}}
+            {{if .PageData.IsLoggedIn}}
             <span class="welcome-message" role="menuitem"
-              >Hi {{.UserName}}</span
+              >Hi {{.PageData.UserName}}</span
             >
             <a href="/logout" class="user-menu-item" role="menuitem">
               <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
@@ -142,9 +142,8 @@
             <h2 class="post-title">{{.Title}}</h2>
             <p>{{.Content}}</p>
             <div class="post-meta">
-              <a href="#" aria-label="View comments"
-                ><i class="far fa-comment-alt" aria-hidden="true"></i> 0
-                comments</a
+              <a href="/view-post?id={{.ID}}" aria-label="View comments"
+                ><i class="far fa-comment-alt" aria-hidden="true"></i> View Comments</a
               >
             </div>
           </div>

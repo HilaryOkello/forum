@@ -9,7 +9,11 @@
         rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/css/index.css">
+    <link rel="stylesheet" href="/static/css/temp.css">
+    <style>
+
+
+    </style>
 </head>
 
 <body>
@@ -113,13 +117,13 @@
                     <h2 class="post-title">{{.Title}}</h2>
                     <p>{{.Content}}</p>
                     <div class="post-meta">
-                        <a href="#" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 0
-                            comments</a>
+                        <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 
+                        </a>
                     </div>
                     <div id="comments-section">
                         <form id="comment-form">
                             <textarea id="comment-content" placeholder="Write your comment..."></textarea>
-                            <button type="submit">Post Comment</button>
+                            <button class="btn btn-primary" type="submit">Comment</button>
                         </form>
 
                         <h3>Comments</h3>
