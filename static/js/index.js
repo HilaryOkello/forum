@@ -94,10 +94,65 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="comment-time">${new Date(commentData.created_at).toLocaleString()}</span>
             </div>
             <p class="comment-content">${commentData.content}</p>
+            <div class="reaction-container">
+                <button class="thumbs-up"><i class="fa-solid fa-thumbs-up"></i> <span>${commentData.likes}</span></button>
+                <button class="thumbs-down"><i class="fa-solid fa-thumbs-down"></i> <span>${commentData.dislikes}</span></button>
+            </div>
         `;
         if (level < MAX_NESTING_LEVEL) addReplyButton(comment, commentData, postID, level);
+
+        // Add event listeners for thumbs-up and thumbs-down
+        const thumbsUpButton = comment.querySelector(".thumbs-up");
+        const thumbsDownButton = comment.querySelector(".thumbs-down");
+
+        thumbsUpButton.addEventListener("click", () => handleReaction(commentData.id, "LIKE", thumbsUpButton, thumbsDownButton));
+        thumbsDownButton.addEventListener("click", () => handleReaction(commentData.id, "DISLIKE", thumbsDownButton, thumbsUpButton));
+
         return comment;
     };
+
+    const handleReaction = async (commentID, reactionType, clickedButton, otherButton) => {
+        try {
+            const response = await fetch("/comments/react", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    comment_id: commentID,
+                    user_id: 1, // Replace with the logged-in user's ID
+                    reaction_type: reactionType,
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json(); // Parse the JSON response
+                const countSpan = clickedButton.querySelector("span");
+                const otherCountSpan = otherButton.querySelector("span");
+
+                // Handle reaction based on the backend's response
+                if (data.status === "added") {
+                    // Increment the clicked button's count
+                    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
+                    clickedButton.classList.add("selected");
+                } else if (data.status === "updated") {
+                    // Update counts: increment the clicked button's count and decrement the other
+                    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
+                    otherCountSpan.textContent = parseInt(otherCountSpan.textContent, 10) - 1;
+                    clickedButton.classList.add("selected");
+                    otherButton.classList.remove("selected");
+                } else if (data.status === "removed") {
+                    // Decrement the clicked button's count
+                    countSpan.textContent = parseInt(countSpan.textContent, 10) - 1;
+                    clickedButton.classList.remove("selected");
+                }
+            } else {
+                alert("Failed to react to the comment. Please try again.");
+            }
+        } catch (error) {
+            console.error("Error reacting to the comment:", error);
+            alert("An error occurred. Please try again.");
+        }
+    };
+
 
     const addReplyButton = (comment, commentData, postID, level) => {
         const replyButton = document.createElement("button");
