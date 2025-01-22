@@ -149,9 +149,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     const parentLevel = parseInt(comment.dataset.level);
                     const replyLevel = parentLevel + 1;
                     const tempReply = createCommentElement({
+                        id: data.id,
                         content: replyContent,
                         username: "You",
-                        created_at: new Date().toISOString(),
+                        created_at: data.created_at,
                     }, replyLevel, postID);
                     let repliesContainer = comment.nextElementSibling;
                     if (!repliesContainer || !repliesContainer.classList.contains("replies-container")) {
