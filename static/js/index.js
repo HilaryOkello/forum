@@ -87,6 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const comment = document.createElement("div");
         comment.classList.add("comment");
         comment.id = `comment-${commentData.id}`;
+        comment.dataset.level = level;
         comment.innerHTML = `
             <div class="comment-header">
                 <span class="comment-author">${commentData.username}</span>
@@ -119,13 +120,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button class="cancel-reply">Cancel</button>
             `;
             replyForm.querySelector(".cancel-reply").addEventListener("click", () => replyForm.remove());
-            replyForm.querySelector(".submit-reply").addEventListener("click", () => submitReply(replyForm, commentData, postID));
+            replyForm.querySelector(".submit-reply").addEventListener("click", () => submitReply(replyForm, commentData, postID, comment));
             comment.appendChild(replyForm);
         }
     };
 
-    const submitReply = (replyForm, commentData, postID) => {
+    const submitReply = (replyForm, commentData, postID, comment) => {
         const replyContent = replyForm.querySelector("textarea").value;
+
+        if (!replyContent.trim()) {
+            alert("Reply cannot be empty.");
+            return;
+        }
+
         fetch(`/comments/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -139,8 +146,32 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((response) => response.json())
             .then((data) => {
                 if (data.status === "success") {
+                    const parentLevel = parseInt(comment.dataset.level);
+                    const replyLevel = parentLevel + 1;
+                    const tempReply = createCommentElement({
+                        content: replyContent,
+                        username: "You",
+                        created_at: new Date().toISOString(),
+                    }, replyLevel, postID);
+                    let repliesContainer = comment.nextElementSibling;
+                    if (!repliesContainer || !repliesContainer.classList.contains("replies-container")) {
+                        repliesContainer = document.createElement("div");
+                        repliesContainer.classList.add("replies-container");
+                        comment.parentElement.insertBefore(repliesContainer, comment.nextSibling);
+                    }
+                    repliesContainer.style.display = "block";
+                    repliesContainer.appendChild(tempReply);
+
+                    // Update reply cound display
+                    const replyCount = repliesContainer.children.length;
+                    let viewRepliesBtn = comment.querySelector(".view-replies-btn");
+                    if (!viewRepliesBtn) {
+                        viewRepliesBtn = document.createElement("button");
+                        viewRepliesBtn.classList.add("view-replies-btn");
+                        comment.appendChild(viewRepliesBtn)
+                    }
+                    viewRepliesBtn.textContent = "Hide Replies"
                     replyForm.remove();
-                    // Optionally re-fetch or dynamically add the new reply
                 } else {
                     alert("Failed to post reply.");
                 }
