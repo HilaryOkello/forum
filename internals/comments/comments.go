@@ -130,8 +130,14 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		Status string `json:"status"`
-	}{Status: "success"}
+		Status    string `json:"status"`
+		ID        int64  `json:"id"`
+		CreatedAt string `json:"created_at"`
+	}{
+		Status:    "success",
+		ID:        id,
+		CreatedAt: createdAt,
+	}
 
 	json.NewEncoder(w).Encode(response)
 }
