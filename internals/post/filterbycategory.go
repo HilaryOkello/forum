@@ -6,6 +6,7 @@ import (
 	"strings"
 	"net/http"
 	"html/template"
+	"forum/internals/auth"
 )
 
 // FetchPostsByCategory retrieves posts from the database filtered by category
@@ -65,13 +66,31 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    // Check if the user is logged in
+    // username := auth.CheckIfLoggedIn(w, r)
+
+    // Create the PageData object
+    var pageData PageData
+    if username == "" {
+        pageData = PageData{
+            IsLoggedIn: false,
+        }
+    } else {
+        pageData = PageData{
+            IsLoggedIn: true,
+            UserName:   username,
+        }
+    }
+
     // Prepare the data to be passed to the template
     data := struct {
         Category string
         Posts    []Post
+        
     }{
         Category: category,
         Posts:    posts,
+        
     }
 
     // Parse and execute the filteredPosts.html template
@@ -81,4 +100,3 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
         fmt.Println("Template execution error:", err)
     }
 }
-
