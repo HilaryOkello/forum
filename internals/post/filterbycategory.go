@@ -67,7 +67,7 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
     }
 
     // Check if the user is logged in
-    // username := auth.CheckIfLoggedIn(w, r)
+    username := auth.CheckIfLoggedIn(w, r)
 
     // Create the PageData object
     var pageData PageData
