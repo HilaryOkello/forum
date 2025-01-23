@@ -86,11 +86,11 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
     data := struct {
         Category string
         Posts    []Post
-        
+        PageData PageData
     }{
         Category: category,
         Posts:    posts,
-        
+        PageData: pageData,
     }
 
     // Parse and execute the filteredPosts.html template
