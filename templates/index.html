@@ -96,14 +96,9 @@
     </nav>
 
     <main class="feed" role="main">
-      <div class="sort-bar">
-        <button class="sort-btn active" aria-label="Sort by hot">Hot</button>
-        <button class="sort-btn" aria-label="Sort by new">New</button>
-        <button class="sort-btn" aria-label="Sort by top">Top</button>
-        <button class="sort-btn" aria-label="Sort by controversial">
-          Controversial
-        </button>
-      </div>
+     <div class="sort-bar">
+        <button class="sort-btn" aria-label="Sort by posts">Posts</button>
+     </div>
 
       {{range .Posts}}
       <div class="post" post-id="{{ .ID}}">
@@ -131,20 +126,18 @@
     </main>
 
     <aside class="right-sidebar" role="complementary">
-      <h3 id="trending-title">Trending Today</h3>
+      <h3 id="trending-title">My Contributions</h3>
       <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>SpaceX successfully launches new satellite constellation</h4>
-        <p>2.5k upvotes &#x2022; 324 comments</p>
-      </div>
-      <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>Major breakthrough in renewable energy storage</h4>
-        <p>1.8k upvotes &#x2022; 245 comments</p>
+        <h4>
+          <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
+          Created Posts
+        </h4>           
       </div>
       <div class="trending-card" role="article" aria-labelledby="trending-title">
         <h4>
-          New AI model achieves human-level performance in complex tasks
-        </h4>
-        <p>1.2k upvotes &#x2022; 198 comments</p>
+          <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
+          Liked Posts
+        </h4>        
       </div>
     </aside>
   </div>
