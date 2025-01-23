@@ -1,6 +1,7 @@
 package comments
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -130,8 +131,14 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := struct {
-		Status string `json:"status"`
-	}{Status: "success"}
+		Status    string `json:"status"`
+		ID        int64  `json:"id"`
+		CreatedAt string `json:"created_at"`
+	}{
+		Status:    "success",
+		ID:        id,
+		CreatedAt: createdAt,
+	}
 
 	json.NewEncoder(w).Encode(response)
 }
@@ -143,23 +150,68 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var input reactToCommentInput
-
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Insert or update the reaction for the comment
-	query := `
-		INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
-		VALUES (?, ?, ?)
-		ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
+	// Check the current reaction for the user and comment
+	var currentReaction string
+	queryCheck := `
+        SELECT reaction_type
+        FROM comment_reactions
+        WHERE comment_id = ? AND user_id = ?`
 
-	_, err := db.DB.Exec(query, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)
-	if err != nil {
+	err := db.DB.QueryRow(queryCheck, input.CommentID, input.UserID).Scan(&currentReaction)
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	var responseStatus string
+	if currentReaction == input.ReactionType {
+		// Remove the reaction if it's the same as the current one
+		queryDelete := `
+            DELETE FROM comment_reactions
+            WHERE comment_id = ? AND user_id = ?`
+		_, err := db.DB.Exec(queryDelete, input.CommentID, input.UserID)
+		if err != nil {
+			fmt.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		responseStatus = "removed"
+	} else {
+		// Insert or update the reaction
+		queryUpsert := `
+            INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
+            VALUES (?, ?, ?)
+            ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
+		_, err := db.DB.Exec(queryUpsert, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)
+		if err != nil {
+			fmt.Println(err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if currentReaction == "" {
+			responseStatus = "added"
+		} else {
+			responseStatus = "updated"
+		}
+	}
+
+	// Send the response back to the client
+	response := map[string]string{
+		"status":           responseStatus,
+		"updatedReaction":  input.ReactionType,
+		"previousReaction": currentReaction,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS comment_reactions (
     reaction_type TEXT CHECK (reaction_type IN ('LIKE', 'DISLIKE')) NOT NULL,
     FOREIGN KEY (comment_id) REFERENCES comments(id),
     FOREIGN KEY (user_id) REFERENCES users(id) 
+    UNIQUE (comment_id, user_id)
 );
 
 -- SESSIONS Table
