@@ -96,11 +96,11 @@
     </nav>
 
     <main class="feed" role="main">
-      <h1>Posts in {{.Category}}</h1>
       <div class="sort-bar">
-        <button class="sort-btn" aria-label="Sort by posts">Posts</button>
+        <button class="sort-btn" aria-label="Sort by posts">Posts</button>       
       </div>
-
+      <h1>{{.Category}}</h1> 
+      
       {{range .Posts}}
       <div class="post" post-id="{{.ID}}">
         <div class="votes">
