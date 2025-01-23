@@ -47,5 +47,5 @@ func main() {
 	// mux.Handle("/dashboard", auth.Middleware(protected))
 
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
-	http.ListenAndServe(":8080", mux)
+	http.ListenAndServe(":8000", mux)
 }
