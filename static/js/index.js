@@ -34,34 +34,44 @@ postDivs.forEach((postDiv) => {
 
 const commentForm = document.getElementById("comment-form");
 
-commentForm.addEventListener("submit", (event) => {
+commentForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const postID = document.getElementById("view-post").getAttribute("post-id");
     const content = document.getElementById("comment-content").value;
 
-    fetch(`/comments/create`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            post_id: Number(postID),
-            parent_id: null, // Set to null for top-level comments
-            user_id: 1, // Replace with the logged-in user's ID
-            content: content,
-        }),
-    })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.status === "success") {
-                document.getElementById("comment-content").value = "";
-                // Re-fetch comments to show the new one
-                document.dispatchEvent(new Event("DOMContentLoaded"));
-            } else {
-                alert("Failed to post comment.");
-            }
+    try {
+        const response = await fetch(`/comments/create`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                post_id: Number(postID),
+                parent_id: null,
+                user_id: 1,
+                content: content,
+            }),
         });
 
+        const text = await response.text();
+        if (!response.ok || text.startsWith("<")) {
+            window.location.href = "/login";
+            return;
+        }
+
+        const data = JSON.parse(text);
+        if (data.status === "success") {
+            document.getElementById("comment-content").value = "";
+            document.dispatchEvent(new Event("DOMContentLoaded"));
+        } else if (data.status === "unauthorized") {
+            window.location.href = "/login";
+        } else {
+            alert("Failed to post comment.");
+        }
+    } catch (error) {
+        console.error("Error posting comment:", error);
+        alert("Failed to post comment.");
+    }
 });
 
 document.addEventListener("DOMContentLoaded", () => {
