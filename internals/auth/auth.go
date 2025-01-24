@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
-	"text/template"
 	"time"
 
 	"forum/db"
-	
 
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -22,7 +21,7 @@ var tmpl = template.Must(template.ParseGlob("templates/*.html"))
 
 type contextKey string
 
-const userSessionKey contextKey = "userSession"
+const UserSessionKey contextKey = "userSession"
 
 func encryptPassword(password string) (string, error) {
 	bcryptPassword, error := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -99,32 +98,18 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Middleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Get session ID from cookie
-		cookie, err := r.Cookie("session")
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+		session := CheckIfLoggedIn(w, r)
 
-		// Parse the UUID from cookie
-		sessionID, err := uuid.FromString(cookie.Value)
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-
-		// Validate session
-		session, valid := store.GetSession(sessionID)
-		if !valid {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+		if session == nil {
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
 		// Extend session
-		store.ExtendSession(sessionID)
+		store.ExtendSession(session.ID)
 
 		// Add session data to the request context
-		ctx := context.WithValue(r.Context(), userSessionKey, session)
+		ctx := context.WithValue(r.Context(), UserSessionKey, session)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -235,87 +220,21 @@ func SaveUserToDb(user User) error {
 	return nil
 }
 
-
-
-func CheckIfLoggedIn(w http.ResponseWriter, r *http.Request) string {
+func CheckIfLoggedIn(w http.ResponseWriter, r *http.Request) *Session {
 	cookie, err := r.Cookie("session")
 	if err != nil {
-		return ""
+		return nil
 	}
 
 	sessionID, err := uuid.FromString(cookie.Value)
 	if err != nil {
-		return ""
+		return nil
 	}
 
 	session, valid := store.GetSession(sessionID)
 	if !valid {
-		return ""
+		return nil
 	}
 
-	return session.UserName
-}
-
-func CreatePost(w http.ResponseWriter, r *http.Request) {
-	// Get session ID from the cookie
-	cookie, err := r.Cookie("session")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Parse the UUID from the cookie
-	sessionID, err := uuid.FromString(cookie.Value)
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Validate the session
-	session, valid := store.GetSession(sessionID)
-	if !valid {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-
-	// Parse the form data
-	err = r.ParseForm()
-	if err != nil {
-		http.Error(w, "Unable to parse form data", http.StatusBadRequest)
-		return
-	}
-
-	title := r.FormValue("title")
-	content := r.FormValue("content")
-	categoryIDs := r.Form["categories[]"]
-
-	// Use the user ID from the session
-	userID := session.UserID
-
-	// Insert the new post into the POSTS table
-	postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
-	result, err := db.DB.Exec(postQuery, userID, title, content)
-	if err != nil {
-		http.Error(w, "Failed to create post", http.StatusInternalServerError)
-		return
-	}
-
-	// Get the ID of the newly created post
-	postID, err := result.LastInsertId()
-	if err != nil {
-		http.Error(w, "Failed to retrieve post ID", http.StatusInternalServerError)
-		return
-	}
-
-	// Insert into the Post_Categories table
-	for _, categoryID := range categoryIDs {
-		_, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
-		if err != nil {
-			http.Error(w, "Failed to associate category with post", http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Redirect to the homepage after successful post creation
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return session
 }

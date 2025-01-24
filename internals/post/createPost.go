@@ -16,15 +16,17 @@ type PageData struct {
 }
 
 func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
-	username := auth.CheckIfLoggedIn(w, r)
-
-	if username == "" {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
-	pageData := PageData{
-		IsLoggedIn: true,
-		UserName:   username,
+	session := auth.CheckIfLoggedIn(w, r)
+	var pageData PageData
+	if session == nil {
+		pageData = PageData{
+			IsLoggedIn: false,
+		}
+	} else {
+		pageData = PageData{
+			IsLoggedIn: true,
+			UserName:   session.UserName,
+		}
 	}
 
 	// Parse and execute the template
@@ -92,21 +94,18 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 
 // ServeHomePage handles requests to render the homepage
 func ServeHomePage(w http.ResponseWriter, r *http.Request) {
-	
-username := auth.CheckIfLoggedIn(w, r)
-var pageData PageData
-if username == "" {
-	pageData = PageData{
-		IsLoggedIn: false,
-		
+	session := auth.CheckIfLoggedIn(w, r)
+	var pageData PageData
+	if session == nil {
+		pageData = PageData{
+			IsLoggedIn: false,
+		}
+	} else {
+		pageData = PageData{
+			IsLoggedIn: true,
+			UserName:   session.UserName,
+		}
 	}
-}else{
-	pageData = PageData{
-		IsLoggedIn: true,
-		UserName:   username,
-	}
-	}
-
 	posts, err := FetchPosts()
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
@@ -118,8 +117,8 @@ if username == "" {
 		return
 	}
 	if err := t.Execute(w, map[string]interface{}{
-		"Posts": posts,
-		"PageData":  pageData,
+		"Posts":    posts,
+		"PageData": pageData,
 	}); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
@@ -127,17 +126,11 @@ if username == "" {
 
 // ServeHomePage handles requests to return homepage data as JSON
 func ServePosts(w http.ResponseWriter, r *http.Request) {
-	username := auth.CheckIfLoggedIn(w, r)
-	var pageData PageData
-	if username == "" {
-		pageData = PageData{
-			IsLoggedIn: false,
-		}
-	} else {
-		pageData = PageData{
-			IsLoggedIn: true,
-			UserName:   username,
-		}
+	session := auth.CheckIfLoggedIn(w, r)
+
+	pageData := PageData{
+		IsLoggedIn: true,
+		UserName:   session.UserName,
 	}
 
 	posts, err := FetchPosts()
@@ -160,4 +153,55 @@ func ServePosts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func CreatePost(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the session from the request context
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session) // Replace *Session with your session type
+	if !ok {
+		// Handle the case where the session is not found in the context
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form data", http.StatusBadRequest)
+		return
+	}
+
+	title := r.FormValue("title")
+	content := r.FormValue("content")
+	categoryIDs := r.Form["categories[]"]
+
+	// Use the user ID from the session
+	userID := session.UserID
+
+	// Insert the new post into the POSTS table
+	postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
+	result, err := db.DB.Exec(postQuery, userID, title, content)
+	if err != nil {
+		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		return
+	}
+
+	// Get the ID of the newly created post
+	postID, err := result.LastInsertId()
+	if err != nil {
+		http.Error(w, "Failed to retrieve post ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert into the Post_Categories table
+	for _, categoryID := range categoryIDs {
+		_, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
+		if err != nil {
+			http.Error(w, "Failed to associate category with post", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Redirect to the homepage after successful post creation
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

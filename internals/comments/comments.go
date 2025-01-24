@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"forum/db"
+	"forum/internals/auth"
 )
 
 // GetComments returns all comments for a post
@@ -101,6 +103,13 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 
 // CreateComment creates a new comment
 func CreateComment(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the session from the request context
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	if !ok {
+		// Handle the case where the session is not found in the context
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -110,7 +119,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the request body into the input struct
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status": "failure",
@@ -123,7 +132,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, created_at`
 
 	// Execute the query and scan the result into the id and createdAt variables
-	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, input.UserID).Scan(&id, &createdAt)
+	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, session.UserID).Scan(&id, &createdAt)
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -144,6 +153,13 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReactToComment(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the session from the request context
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	if !ok {
+		// Handle the case where the session is not found in the context
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -162,7 +178,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
         FROM comment_reactions
         WHERE comment_id = ? AND user_id = ?`
 
-	err := db.DB.QueryRow(queryCheck, input.CommentID, input.UserID).Scan(&currentReaction)
+	err := db.DB.QueryRow(queryCheck, input.CommentID, session.UserID).Scan(&currentReaction)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -175,7 +191,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		queryDelete := `
             DELETE FROM comment_reactions
             WHERE comment_id = ? AND user_id = ?`
-		_, err := db.DB.Exec(queryDelete, input.CommentID, input.UserID)
+		_, err := db.DB.Exec(queryDelete, input.CommentID, session.UserID)
 		if err != nil {
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -188,7 +204,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
             INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
             VALUES (?, ?, ?)
             ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
-		_, err := db.DB.Exec(queryUpsert, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)
+		_, err := db.DB.Exec(queryUpsert, input.CommentID, session.UserID, input.ReactionType, input.ReactionType)
 		if err != nil {
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
