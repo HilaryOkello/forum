@@ -11,6 +11,7 @@ import (
 	"forum/internals/post"
 )
 
+
 func main() {
 	// Initialize the database
 	err := db.Initialize()
@@ -24,19 +25,19 @@ func main() {
 	mux.HandleFunc("/posts", post.ServePosts)
 	mux.HandleFunc("/", post.ServeHomePage)
 
-
 	mux.HandleFunc("/login", auth.Login)
 	mux.HandleFunc("/logout", auth.Logout)
 	mux.HandleFunc("/signup", auth.Signup)
-	mux.HandleFunc("/create-post-form", post.ServeCreatePostForm)
 	mux.HandleFunc("/categories", post.ServeCategories)
-	mux.HandleFunc("/create-post", auth.CreatePost)
+
 	mux.HandleFunc("/view-post", post.ViewPost)
 	mux.HandleFunc("/category", post.ViewPostsByCategory)
 
 	// Comment Routes
 	mux.HandleFunc("/comments", comments.GetComments)
-	mux.HandleFunc("/comments/create", comments.CreateComment)
+	mux.HandleFunc("/comments/create", auth.Middleware(http.HandlerFunc(comments.CreateComment)))
+	mux.HandleFunc("/create-post-form", auth.Middleware(http.HandlerFunc(post.ServeCreatePostForm)))
+	mux.HandleFunc("/create-post", auth.Middleware(http.HandlerFunc(post.CreatePost)))
 	mux.HandleFunc("/comments/react", comments.ReactToComment)
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
