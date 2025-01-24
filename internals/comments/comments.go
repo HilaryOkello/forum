@@ -191,7 +191,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		queryDelete := `
             DELETE FROM comment_reactions
             WHERE comment_id = ? AND user_id = ?`
-		_, err := db.DB.Exec(queryDelete, input.CommentID, input.UserID)
+		_, err := db.DB.Exec(queryDelete, input.CommentID, session.ID)
 		if err != nil {
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -204,7 +204,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
             INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
             VALUES (?, ?, ?)
             ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
-		_, err := db.DB.Exec(queryUpsert, input.CommentID, input.UserID, input.ReactionType, input.ReactionType)
+		_, err := db.DB.Exec(queryUpsert, input.CommentID, session.UserID, input.ReactionType, input.ReactionType)
 		if err != nil {
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
