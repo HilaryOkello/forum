@@ -191,7 +191,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		queryDelete := `
             DELETE FROM comment_reactions
             WHERE comment_id = ? AND user_id = ?`
-		_, err := db.DB.Exec(queryDelete, input.CommentID, session.ID)
+		_, err := db.DB.Exec(queryDelete, input.CommentID, session.UserID)
 		if err != nil {
 			fmt.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
