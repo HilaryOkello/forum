@@ -46,9 +46,8 @@
                     <img src="/static/user.png" alt="User avatar" class="user-avatar" />
                 </button>
                 <div class="user-menu" role="menu">
-                    {{/*
-                    {{if .IsLoggedIn}}
-                    <span class="welcome-message" role="menuitem">Hi {{.UserName}}</span>
+                    {{if .PageData.IsLoggedIn}}
+                    <span class="welcome-message" role="menuitem">Hi {{.PageData.UserName}}</span>
                     <a href="/logout" class="user-menu-item" role="menuitem">
                         <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
                     </a>
@@ -60,7 +59,6 @@
                         <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
                     </a>
                     {{end}}
-                    */}}
                 </div>
             </div>
         </div>
@@ -104,11 +102,11 @@
         </nav>
 
         <main class="feed" role="main">
-            <div class="sort-bar">                
+            <div class="sort-bar">
                 <button class="sort-btn" aria-label="Sort by posts">Posts</button>
             </div>
 
-            <div class="view-post" id="view-post" post-id="{{ .ID}}">
+            <div class="view-post" id="view-post" post-id="{{ .Post.ID}}">
                 <div class="votes">
                     <button class="vote-btn" aria-label="Upvote">
                         <i class="fas fa-thumbs-up" aria-hidden="true"></i>
@@ -120,9 +118,9 @@
                     </button>
                 </div>
                 <div class="post-content">
-                    <a href="#" class="community-name">Posted by {{.UserName}}</a>
-                    <h2 class="post-title">{{.Title}}</h2>
-                    <p>{{.Content}}</p>
+                    <a href="#" class="community-name">Posted by {{ .Post.UserName}}</a>
+                    <h2 class="post-title">{{ .Post.Title}}</h2>
+                    <p>{{ .Post.Content}}</p>
                     <div class="post-meta">
                         <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt"
                                 aria-hidden="true"></i>
@@ -147,13 +145,13 @@
                 <h4>
                     <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
                     Created Posts
-                  </h4>                  
+                </h4>
             </div>
             <div class="trending-card" role="article" aria-labelledby="trending-title">
                 <h4>
                     <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
                     Liked Posts
-                  </h4>                  
+                </h4>
             </div>
         </aside>
     </div>

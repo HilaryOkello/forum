@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"forum/db"
+	"forum/internals/auth"
 )
 
 // Post represents a post structure
@@ -96,8 +97,34 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if the user is logged in
+	session := auth.CheckIfLoggedIn(w, r)
+
+	// Create the PageData object
+	var pageData PageData
+
+
+	if session == nil {
+		pageData = PageData{
+			IsLoggedIn: false,
+		}
+	} else {
+		pageData = PageData{
+			IsLoggedIn: true,
+			UserName:   session.UserName,
+		}
+	}
+
+	response := struct {
+		PageData
+		Post *Post
+	}{
+		PageData: pageData,
+		Post: post,
+	}
+
 	tmpl := template.Must(template.ParseFiles("templates/viewPost.html"))
-	if err := tmpl.Execute(w, post); err != nil {
+	if err := tmpl.Execute(w, response); err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		fmt.Println("Template execution error:", err)
 	}
