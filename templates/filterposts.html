@@ -1,222 +1,195 @@
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>The Forum - Filtered Posts</title>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
-        rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/css/index.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Forum - {{.Category}} Posts</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/css/index.css">
 </head>
 
 <body>
-    <header class="header" role="banner">
-        <a href="/" class="logo">
-            <i class="fas fa-rocket"></i>
-            The Forum
-        </a>
+  <header class="header" role="banner">
+    <a href="/" class="logo">
+      <i class="fas fa-rocket"></i>
+      The Forum
+    </a>
 
-        <div class="search" role="search">
-            <i class="fas fa-search" aria-hidden="true"></i>
-            <input type="text" placeholder="Search MyReddit" aria-label="Search posts" />
-        </div>
-
-        <div class="nav-right">
-            <a href="/" class="nav-link"></a> <!-- redirect to homepage after successful creation for post. -->
-            <button class="create-post-btn" aria-label="Create new post">
-                <a href="/create-post-form">Create-Post</a>
-            </button>
-            <div id="notification" class="hidden"></div> <!-- for notification pop-up -->
-            <button class="nav-btn" aria-label="Notifications">
-                <i class="far fa-bell" aria-hidden="true"></i>
-            </button>
-            <button class="nav-btn" aria-label="Messages">
-                <i class="far fa-comment-alt" aria-hidden="true"></i>
-            </button>
-            <div class="user-dropdown">
-                <button class="nav-btn" aria-label="User menu">
-                    <img src="/static/user.png" alt="User avatar" class="user-avatar" />
-                </button>
-                <div class="user-menu" role="menu">
-                    {{/*
-                    {{if .IsLoggedIn}}
-                    <span class="welcome-message" role="menuitem">Hi {{.UserName}}</span>
-                    <a href="/logout" class="user-menu-item" role="menuitem">
-                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
-                    </a>
-                    {{else}}
-                    <a href="/login" class="user-menu-item" role="menuitem">
-                        <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
-                    </a>
-                    <a href="/signup" class="user-menu-item" role="menuitem">
-                        <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
-                    </a>
-                    {{end}}
-                    */}}
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <div class="layout">
-        <nav class="left-sidebar" role="navigation">
-            <div class="sidebar-section">
-                <h3>Categories</h3>
-                <a href="/category?name=technology" class="sidebar-link" aria-label="Technology category">
-                    <i class="fas fa-microchip" aria-hidden="true"></i> Technology
-                  </a>
-                  <a href="/category?name=entertainment" class="sidebar-link" aria-label="Music category">
-                    <i class="fas fa-music" aria-hidden="true"></i> Music
-                  </a>
-                  <a href="/category?name=politics" class="sidebar-link" aria-label="Politics category">
-                    <i class="fas fa-landmark" aria-hidden="true"></i> Politics
-                  </a>
-                  <a href="/category?name=sports" class="sidebar-link" aria-label="Sports category">
-                    <i class="fas fa-basketball-ball" aria-hidden="true"></i> Sports
-                  </a>
-                  <a href="/category?name=health" class="sidebar-link" aria-label="Health category">
-                    <i class="fas fa-heartbeat" aria-hidden="true"></i> Health
-                  </a>
-                  <a href="/category?name=education" class="sidebar-link" aria-label="Education category">
-                    <i class="fas fa-graduation-cap" aria-hidden="true"></i> Education
-                  </a>
-                  <a href="/category?name=travel" class="sidebar-link" aria-label="Travel category">
-                    <i class="fas fa-plane" aria-hidden="true"></i> Travel
-                  </a>
-                  <a href="/category?name=food" class="sidebar-link" aria-label="Food category">
-                    <i class="fas fa-utensils" aria-hidden="true"></i> Food
-                  </a>
-                  <a href="/category?name=business" class="sidebar-link" aria-label="Business category">
-                    <i class="fas fa-briefcase" aria-hidden="true"></i> Business
-                  </a>
-                  <a href="/category?name=lifestyle" class="sidebar-link" aria-label="Lifestyle category">
-                    <i class="fas fa-cogs" aria-hidden="true"></i> Lifestyle
-                  </a>
-            </div>
-        </nav>
-
-        <main class="feed" role="main">
-            <div class="sort-bar">
-                <button class="sort-btn" aria-label="Sort by posts">Posts</button>        
-            </div>
-
-            <!-- Displaying filtered posts -->
-            {{range .Posts}}
-            <div class="view-post" id="view-post-{{.ID}}" post-id="{{.ID}}">
-                <div class="votes">
-                    <button class="vote-btn" aria-label="Upvote">
-                        <i class="fas fa-thumbs-up" aria-hidden="true"></i>
-                    </button>
-                    <span>--</span>
-                    <button class="vote-btn" aria-label="Downvote">
-                        <i class="fas fa-thumbs-down" aria-hidden="true"></i>
-                    </button>
-                </div>
-                <div class="post-content">
-                    <a href="#" class="community-name">Posted by {{.UserName}}</a>
-                    <h2 class="post-title">{{.Title}}</h2>
-                    <p>{{.Content}}</p>
-                    <div class="post-meta">
-                        <a href="#" aria-label="View comments"><i class="far fa-comment-alt" aria-hidden="true"></i> 0
-                            comments</a>
-                    </div>
-                    <div id="comments-section">
-                        <form id="comment-form">
-                            <textarea id="comment-content" placeholder="Write your comment..."></textarea>
-                            <button type="submit">Post Comment</button>
-                        </form>
-
-                        <h3>Comments</h3>
-                        <div id="comments-list"></div>
-                    </div>
-                </div>
-            </div>
-            {{else}}
-            <p>No posts found in this category.</p>
-            {{end}}
-        </main>
-
-        <aside class="right-sidebar" role="complementary">
-            <h3 id="trending-title">My Contributions</h3>
-            <div class="trending-card" role="article" aria-labelledby="trending-title">
-                <h4>
-                    <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
-                    Created Posts
-                  </h4>                              
-            </div>
-            <div class="trending-card" role="article" aria-labelledby="trending-title">
-                <h4>
-                    <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
-                    Liked Posts
-                  </h4>                  
-            </div>
-        </aside>
+    <div class="search" role="search">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <input type="text" placeholder="Search MyReddit" aria-label="Search posts" />
     </div>
 
-    <footer class="footer" role="contentinfo">
-        <div class="footer-links">
-            <a href="/about">About</a>
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
-            <a href="/contact">Contact Us</a>
+    <div class="nav-right">
+      <a href="/" class="nav-link"></a> <!-- redirect to homepage after successful creation for post. -->
+      <button class="create-post-btn" aria-label="Create new post">
+        <a href="/create-post-form">Create-Post</a>
+      </button>
+      <div id="notification" class="hidden"></div> <!-- for notification pop-up -->
+      <button class="nav-btn" aria-label="Notifications">
+        <i class="far fa-bell" aria-hidden="true"></i>
+      </button>
+      <button class="nav-btn" aria-label="Messages">
+        <i class="far fa-comment-alt" aria-hidden="true"></i>
+      </button>
+      <div class="user-dropdown">
+        <button class="nav-btn" aria-label="User menu">
+          <img src="/static/user.png" alt="User avatar" class="user-avatar" />
+        </button>
+        <div class="user-menu" role="menu">
+          {{if .PageData.IsLoggedIn}}
+          <span class="welcome-message" role="menuitem">Hi {{.PageData.UserName}}</span>
+          <a href="/logout" class="user-menu-item" role="menuitem">
+            <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Logout
+          </a>
+          {{else}}
+          <a href="/login" class="user-menu-item" role="menuitem">
+            <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+          </a>
+          <a href="/signup" class="user-menu-item" role="menuitem">
+            <i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up
+          </a>
+          {{end}}
         </div>
-        <p>2025 MyReddit. All rights reserved.</p>
-    </footer>
+      </div>
+    </div>
+  </header>
 
-    <script>
-        document.querySelectorAll(".vote-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-                const voteCount = this.parentElement.querySelector("span");
-                const currentVotes = parseInt(
-                    voteCount.textContent.replace("k", "000")
-                );
-                this.parentElement
-                    .querySelectorAll(".vote-btn")
-                    .forEach((b) => (b.style.color = "#818384"));
-                if (this.textContent === "▲") {
-                    voteCount.textContent = currentVotes + 1 + "k";
-                    this.style.color = "#FF4500";
-                } else {
-                    voteCount.textContent = currentVotes - 1 + "k";
-                    this.style.color = "#7193FF";
-                }
-            });
-        });
-        document.querySelectorAll(".sort-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-                document.querySelector(".sort-btn.active").classList.remove("active");
-                this.classList.add("active");
-            });
-        });
-        window.addEventListener("load", () => {
-            const layout = document.querySelector(".layout");
-            const updateLayout = () => {
-                const windowWidth = window.innerWidth;
-                const contentWidth = Math.min(1600, windowWidth * 0.95);
-                layout.style.maxWidth = `${contentWidth}px`;
-            };
-            updateLayout();
-            window.addEventListener("resize", updateLayout);
-        });
-        const userBtn = document.querySelector(".user-dropdown .nav-btn");
-        const userMenu = document.querySelector(".user-menu");
-        userBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            userMenu.classList.toggle("show");
-        });
-        document.addEventListener("click", (e) => {
-            if (!userMenu.contains(e.target)) {
-                userMenu.classList.remove("show");
-            }
-        });
-        userMenu.addEventListener("click", (e) => {
-            e.stopPropagation();
-        });
-    </script>
-    <script src="/static/js/index.js"></script>
+  <div class="layout">
+    <nav class="left-sidebar" role="navigation">
+      <div class="sidebar-section">
+        <h3>Categories</h3>
+        <a href="/category?name=technology" class="sidebar-link" aria-label="Technology category">
+          <i class="fas fa-microchip" aria-hidden="true"></i> Technology
+        </a>
+        <a href="/category?name=entertainment" class="sidebar-link" aria-label="Music category">
+          <i class="fas fa-music" aria-hidden="true"></i> Music
+        </a>
+        <a href="/category?name=politics" class="sidebar-link" aria-label="Politics category">
+          <i class="fas fa-landmark" aria-hidden="true"></i> Politics
+        </a>
+        <a href="/category?name=sports" class="sidebar-link" aria-label="Sports category">
+          <i class="fas fa-basketball-ball" aria-hidden="true"></i> Sports
+        </a>
+        <a href="/category?name=health" class="sidebar-link" aria-label="Health category">
+          <i class="fas fa-heartbeat" aria-hidden="true"></i> Health
+        </a>
+        <a href="/category?name=education" class="sidebar-link" aria-label="Education category">
+          <i class="fas fa-graduation-cap" aria-hidden="true"></i> Education
+        </a>
+        <a href="/category?name=travel" class="sidebar-link" aria-label="Travel category">
+          <i class="fas fa-plane" aria-hidden="true"></i> Travel
+        </a>
+        <a href="/category?name=food" class="sidebar-link" aria-label="Food category">
+          <i class="fas fa-utensils" aria-hidden="true"></i> Food
+        </a>
+        <a href="/category?name=business" class="sidebar-link" aria-label="Business category">
+          <i class="fas fa-briefcase" aria-hidden="true"></i> Business
+        </a>
+        <a href="/category?name=lifestyle" class="sidebar-link" aria-label="Lifestyle category">
+          <i class="fas fa-cogs" aria-hidden="true"></i> Lifestyle
+        </a>
+      </div>
+    </nav>
+
+    <main class="feed" role="main">
+      <div class="sort-bar">
+        <button class="sort-btn" aria-label="Sort by posts">Posts</button>       
+      </div>
+      <h1>{{.Category}}</h1> 
+      
+      {{range .Posts}}
+      <div class="post" post-id="{{.ID}}">
+        <div class="votes">
+          <button class="vote-btn" aria-label="Upvote">
+            <i class="fas fa-thumbs-up" aria-hidden="true"></i>
+          </button>
+          <span>--</span>
+          <!-- Placeholder for vote count -->
+          <button class="vote-btn" aria-label="Downvote">
+            <i class="fas fa-thumbs-down" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="post-content">
+          <a href="/view-post?id={{.ID}}" class="community-name">Posted by {{.UserName}}</a>
+          <h2 class="post-title">{{.Title}}</h2>
+          <p>{{.Content}}</p>
+          <div class="post-meta">
+            <a href="/view-post?id={{.ID}}" aria-label="View comments"><i class="far fa-comment-alt"
+                aria-hidden="true"></i> View Comments</a>
+          </div>
+        </div>
+      </div>
+      {{end}}
+    </main>
+
+    <aside class="right-sidebar" role="complementary">
+      <h3 id="trending-title">My Contributions</h3>
+      <div class="trending-card" role="article" aria-labelledby="trending-title">
+        <h4>
+          <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
+          Created Posts
+        </h4>           
+      </div>
+      <div class="trending-card" role="article" aria-labelledby="trending-title">
+        <h4>
+          <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
+          Liked Posts
+        </h4>        
+      </div>
+    </aside>
+  </div>
+
+  <footer class="footer" role="contentinfo">
+    <div class="footer-links">
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      <a href="/contact">Contact Us</a>
+    </div>
+    <p>2025 MyReddit. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.querySelectorAll(".vote-btn").forEach((btn) => {
+      btn.addEventListener("click", function () {
+        const voteCount = this.parentElement.querySelector("span");
+        const currentVotes = parseInt(
+          voteCount.textContent.replace("k", "000")
+        );
+        this.parentElement
+          .querySelectorAll(".vote-btn")
+          .forEach((b) => (b.style.color = "#818384"));
+        if (this.textContent === "▲") {
+          voteCount.textContent = currentVotes + 1 + "k";
+          this.style.color = "#FF4500";
+        } else {
+          voteCount.textContent = currentVotes - 1 + "k";
+          this.style.color = "#7193FF";
+        }
+      });
+    });
+    document.querySelectorAll(".sort-btn").forEach((btn) => {
+      btn.addEventListener("click", function () {
+        document.querySelector(".sort-btn.active").classList.remove("active");
+        this.classList.add("active");
+      });
+    });
+    window.addEventListener("load", () => {
+      const layout = document.querySelector(".layout");
+      const updateLayout = () => {
+        const windowWidth = window.innerWidth;
+        const contentWidth = Math.min(1600, windowWidth * 0.95);
+        layout.style.maxWidth = `${contentWidth}px`;
+      };
+      updateLayout();
+      window.addEventListener("resize", updateLayout);
+    });
+  </script>
+  <script src="/static/js/index.js"></script>
 </body>
 
 </html>
