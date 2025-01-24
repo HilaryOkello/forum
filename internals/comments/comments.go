@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"forum/db"
+	"forum/internals/auth"
 )
 
 // GetComments returns all comments for a post
@@ -101,6 +103,14 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 
 // CreateComment creates a new comment
 func CreateComment(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the session from the request context
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session) // Replace *Session with your session type
+	if !ok {
+		// Handle the case where the session is not found in the context
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	fmt.Println(session)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -110,7 +120,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	// Decode the request body into the input struct
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
 			"status": "failure",
