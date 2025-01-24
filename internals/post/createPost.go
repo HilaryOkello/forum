@@ -18,17 +18,15 @@ type PageData struct {
 func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	session := auth.CheckIfLoggedIn(w, r)
 	var pageData PageData
-if session == nil {
+	if session == nil {
 		pageData = PageData{
 			IsLoggedIn: false,
 		}
-	
-	}else{
-
+	} else {
 		pageData = PageData{
-		IsLoggedIn: true,
-		UserName:   session.UserName,
-	}
+			IsLoggedIn: true,
+			UserName:   session.UserName,
+		}
 	}
 
 	// Parse and execute the template
@@ -98,17 +96,15 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 	session := auth.CheckIfLoggedIn(w, r)
 	var pageData PageData
-if session == nil {
+	if session == nil {
 		pageData = PageData{
 			IsLoggedIn: false,
 		}
-	
-	}else{
-
+	} else {
 		pageData = PageData{
-		IsLoggedIn: true,
-		UserName:   session.UserName,
-	}
+			IsLoggedIn: true,
+			UserName:   session.UserName,
+		}
 	}
 	posts, err := FetchPosts()
 	if err != nil {
