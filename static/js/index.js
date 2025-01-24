@@ -48,7 +48,6 @@ commentForm.addEventListener("submit", async (event) => {
             body: JSON.stringify({
                 post_id: Number(postID),
                 parent_id: null,
-                user_id: 1,
                 content: content,
             }),
         });
@@ -63,8 +62,6 @@ commentForm.addEventListener("submit", async (event) => {
         if (data.status === "success") {
             document.getElementById("comment-content").value = "";
             document.dispatchEvent(new Event("DOMContentLoaded"));
-        } else if (data.status === "unauthorized") {
-            window.location.href = "/login";
         } else {
             alert("Failed to post comment.");
         }
@@ -128,34 +125,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     comment_id: commentID,
-                    user_id: 1, // Replace with the logged-in user's ID
                     reaction_type: reactionType,
                 }),
             });
-
-            if (response.ok) {
-                const data = await response.json(); // Parse the JSON response
-                const countSpan = clickedButton.querySelector("span");
-                const otherCountSpan = otherButton.querySelector("span");
-
-                // Handle reaction based on the backend's response
-                if (data.status === "added") {
-                    // Increment the clicked button's count
-                    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
-                    clickedButton.classList.add("selected");
-                } else if (data.status === "updated") {
-                    // Update counts: increment the clicked button's count and decrement the other
-                    countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
-                    otherCountSpan.textContent = parseInt(otherCountSpan.textContent, 10) - 1;
-                    clickedButton.classList.add("selected");
-                    otherButton.classList.remove("selected");
-                } else if (data.status === "removed") {
-                    // Decrement the clicked button's count
-                    countSpan.textContent = parseInt(countSpan.textContent, 10) - 1;
-                    clickedButton.classList.remove("selected");
-                }
-            } else {
-                alert("Failed to react to the comment. Please try again.");
+    
+            const text = await response.text(); // Read the response as text first
+            if (!response.ok || text.startsWith("<")) {
+                // Redirect to login if the response is HTML or not OK
+                window.location.href = "/login";
+                return;
+            }
+    
+            const data = JSON.parse(text); // Parse the response as JSON
+            const countSpan = clickedButton.querySelector("span");
+            const otherCountSpan = otherButton.querySelector("span");
+    
+            // Handle reaction based on the backend's response
+            if (data.status === "added") {
+                // Increment the clicked button's count
+                countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
+                clickedButton.classList.add("selected");
+            } else if (data.status === "updated") {
+                // Update counts: increment the clicked button's count and decrement the other
+                countSpan.textContent = parseInt(countSpan.textContent, 10) + 1;
+                otherCountSpan.textContent = parseInt(otherCountSpan.textContent, 10) - 1;
+                clickedButton.classList.add("selected");
+                otherButton.classList.remove("selected");
+            } else if (data.status === "removed") {
+                // Decrement the clicked button's count
+                countSpan.textContent = parseInt(countSpan.textContent, 10) - 1;
+                clickedButton.classList.remove("selected");
             }
         } catch (error) {
             console.error("Error reacting to the comment:", error);
@@ -204,13 +203,20 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
                 post_id: Number(postID),
                 parent_id: commentData.id,
-                user_id: 1, // Replace with logged-in user's ID
                 content: replyContent,
             }),
         })
-            .then((response) => response.json())
+            .then((response) => {
+                return response.text().then((text) => {
+                    if (!response.ok || text.startsWith("<")) {
+                        window.location.href = "/login";
+                        return;
+                    }
+                    return JSON.parse(text);
+                });
+            })
             .then((data) => {
-                if (data.status === "success") {
+                if (data && data.status === "success") {
                     const parentLevel = parseInt(comment.dataset.level);
                     const replyLevel = parentLevel + 1;
                     const tempReply = createCommentElement({
@@ -228,13 +234,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     repliesContainer.style.display = "block";
                     repliesContainer.appendChild(tempReply);
 
-                    // Update reply cound display
+                    // Update reply count display
                     const replyCount = repliesContainer.children.length;
                     let viewRepliesBtn = comment.querySelector(".view-replies-btn");
                     if (!viewRepliesBtn) {
                         viewRepliesBtn = document.createElement("button");
                         viewRepliesBtn.classList.add("view-replies-btn");
-                        comment.appendChild(viewRepliesBtn)
+                        comment.appendChild(viewRepliesBtn);
                         // Add click event listener
                         viewRepliesBtn.addEventListener("click", () => {
                             const repliesContainer = comment.nextElementSibling;
@@ -248,6 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     alert("Failed to post reply.");
                 }
+            })
+            .catch((error) => {
+                console.error("Error posting reply:", error);
+                alert("Failed to post reply.");
             });
     };
 
