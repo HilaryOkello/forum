@@ -104,13 +104,12 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 // CreateComment creates a new comment
 func CreateComment(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session from the request context
-	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session) // Replace *Session with your session type
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
 	if !ok {
 		// Handle the case where the session is not found in the context
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-	fmt.Println(session)
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -133,7 +132,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, created_at`
 
 	// Execute the query and scan the result into the id and createdAt variables
-	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, input.UserID).Scan(&id, &createdAt)
+	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, session.UserID).Scan(&id, &createdAt)
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -154,6 +153,13 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func ReactToComment(w http.ResponseWriter, r *http.Request) {
+	// Retrieve the session from the request context
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	if !ok {
+		// Handle the case where the session is not found in the context
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -172,7 +178,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
         FROM comment_reactions
         WHERE comment_id = ? AND user_id = ?`
 
-	err := db.DB.QueryRow(queryCheck, input.CommentID, input.UserID).Scan(&currentReaction)
+	err := db.DB.QueryRow(queryCheck, input.CommentID, session.UserID).Scan(&currentReaction)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)

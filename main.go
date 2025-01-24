@@ -38,7 +38,7 @@ func main() {
 	mux.HandleFunc("/comments/create", auth.Middleware(http.HandlerFunc(comments.CreateComment)))
 	mux.HandleFunc("/create-post-form", auth.Middleware(http.HandlerFunc(post.ServeCreatePostForm)))
 	mux.HandleFunc("/create-post", auth.Middleware(http.HandlerFunc(post.CreatePost)))
-	mux.HandleFunc("/comments/react", comments.ReactToComment)
+	mux.HandleFunc("/comments/react", auth.Middleware(http.HandlerFunc(comments.ReactToComment)))
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// // private routes
