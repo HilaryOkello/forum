@@ -26,7 +26,7 @@ func FetchPostsByCategory(category string) ([]Post, error) {
 		ORDER BY p.id DESC;
 	`
 
-	// Using db.DB to query the database (db.DB is likely a *sql.DB object from the db package)
+	// Using db.DB to query the database
 	rows, err := db.DB.Query(query, category)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch posts by category: %w", err)
@@ -67,18 +67,18 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
     }
 
     // Check if the user is logged in
-    username := auth.CheckIfLoggedIn(w, r)
+    session := auth.CheckIfLoggedIn(w, r)
 
     // Create the PageData object
     var pageData PageData
-    if username == "" {
+    if session == nil {
         pageData = PageData{
             IsLoggedIn: false,
         }
     } else {
         pageData = PageData{
             IsLoggedIn: true,
-            UserName:   username,
+            UserName:   session.UserName,
         }
     }
 
