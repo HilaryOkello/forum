@@ -101,16 +101,16 @@
      </div>
 
       {{range .Posts}}
-      <div class="post" post-id="{{ .ID}}">
+      <div class="post" id="post" post-id="{{ .ID}}">
         <div class="votes">
-          <button class="vote-btn" aria-label="Upvote">
+          <button class="like-btn" aria-label="Upvote">
             <i class="fas fa-thumbs-up" aria-hidden="true"></i>
           </button>
-          <span>--</span>
-          <!-- Placeholder for vote count -->
-          <button class="vote-btn" aria-label="Downvote">
+          <span>{{ .Likes }}</span>
+          <button class="dislike-btn" aria-label="Downvote">
             <i class="fas fa-thumbs-down" aria-hidden="true"></i>
           </button>
+          <span>{{ .Dislikes }}</span>
         </div>
         <div class="post-content">
           <a href="#" class="community-name">Posted by {{.UserName}}</a>
@@ -153,24 +153,6 @@
   </footer>
 
   <script>
-    document.querySelectorAll(".vote-btn").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        const voteCount = this.parentElement.querySelector("span");
-        const currentVotes = parseInt(
-          voteCount.textContent.replace("k", "000")
-        );
-        this.parentElement
-          .querySelectorAll(".vote-btn")
-          .forEach((b) => (b.style.color = "#818384"));
-        if (this.textContent === "▲") {
-          voteCount.textContent = currentVotes + 1 + "k";
-          this.style.color = "#FF4500";
-        } else {
-          voteCount.textContent = currentVotes - 1 + "k";
-          this.style.color = "#7193FF";
-        }
-      });
-    });
     document.querySelectorAll(".sort-btn").forEach((btn) => {
       btn.addEventListener("click", function () {
         document.querySelector(".sort-btn.active").classList.remove("active");
