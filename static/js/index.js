@@ -381,3 +381,74 @@ const countComments = (comments) => {
     });
     return count;
 };
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    console.log('DOM loaded');
+    // Function to save all current posts to localStorage
+    function saveAllPosts() {
+        const posts = Array.from(document.querySelectorAll('.post')).map(post => ({
+            id: post.getAttribute('post-id'),
+            html: post.outerHTML
+        }));
+
+        // Avoid saving if posts haven't changed
+        const currentPosts = JSON.parse(localStorage.getItem('allPosts') || '[]');
+        if (JSON.stringify(posts) !== JSON.stringify(currentPosts)) {
+            localStorage.setItem('allPosts', JSON.stringify(posts));
+        }
+    }
+
+    // Function to filter posts by user
+    function filterPostsByUser() {
+        fetch('/userfilter')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch user posts');
+                }
+                return response.json();
+            })
+            .then(userPostIds => {
+                if (!userPostIds || userPostIds.length === 0) {
+                    console.warn("No posts found for this user.");
+                    return;
+                }
+
+                // Retrieve all posts from localStorage
+                const allPosts = JSON.parse(localStorage.getItem('allPosts') || '[]');
+
+                // Clear current feed while preserving the sort bar
+                const feedElement = document.querySelector('.feed');
+                const sortBar = feedElement.querySelector('.sort-bar');
+                feedElement.innerHTML = '';
+                feedElement.appendChild(sortBar);
+
+                // Filter and add only user's posts
+                userPostIds.forEach(postId => {
+                    const matchingPost = allPosts.find(post => post.id == postId);
+                    if (matchingPost) {
+                        const postElement = document.createElement('div');
+                        postElement.innerHTML = matchingPost.html;
+
+                        // Add a class for visual differentiation (optional)
+                        postElement.firstChild.classList.add('user-post');
+                        
+                        feedElement.appendChild(postElement.firstChild);
+                    } else {
+                        console.warn(`Post with ID ${postId} not found.`);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error filtering posts:', error);
+            });
+    }
+
+    // Add event listener to "Created Posts" link
+    document.getElementById('created-posts').addEventListener('click', () => {
+        console.log('Filtering posts by user...');
+        e.preventDefault(); // Prevent default link behavior
+        saveAllPosts(); // Save all posts before filtering
+        filterPostsByUser(); // Filter posts
+    });
+});
