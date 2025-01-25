@@ -33,6 +33,7 @@ func main() {
 	mux.HandleFunc("/category", post.ViewPostsByCategory)
 
 	mux.HandleFunc("/userfilter", auth.Middleware(http.HandlerFunc(post.FilterbyUser)))
+	mux.HandleFunc("/likesfilter", auth.Middleware(http.HandlerFunc(post.FilterbyLikes)))
 
 	// Comment Routes
 	mux.HandleFunc("/comments", comments.GetComments)
