@@ -65,6 +65,22 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 });
 
+
+// Get all 'post' divs with the class 'post'
+const postDivs = document.querySelectorAll('.list-post');
+// Add a click event listener to each 'post' div
+postDivs.forEach((postDiv) => {
+    postDiv.addEventListener('click', () => {
+        const postId = postDiv.getAttribute('post-id');
+        // Redirect to post/view with the post ID
+        if (postId) {
+            window.location.href = `/view-post?id=${postId}`;
+        } else {
+            console.error('Post ID not found!');
+        }
+    });
+})
+
 const commentForm = document.getElementById("comment-form");
 
 commentForm.addEventListener("submit", async (event) => {
