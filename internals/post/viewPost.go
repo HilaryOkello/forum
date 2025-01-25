@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"time"
 
@@ -86,27 +87,49 @@ func FetchPosts() ([]Post, error) {
 
 // fetchPostFromDB retrieves a post by its ID from the database.
 func fetchPostFromDB(postID string) (*Post, error) {
-	// SQL query to fetch the post.
+	// SQL query to fetch the post with additional fields.
 	query := `
 		SELECT 
-			posts.id, 
-			posts.title, 
-			posts.content, 
-			users.username, 
-			posts.created_at
-		FROM 
-			posts
-		INNER JOIN 
-			users ON posts.user_id = users.id
-		WHERE 
-			posts.id = ?;
+			p.id, 
+			p.title, 
+			p.content, 
+			u.username, 
+			p.created_at,
+			COALESCE(c.comment_count, 0) AS comment_count,
+			COALESCE(r.likes, 0) AS likes,
+			COALESCE(r.dislikes, 0) AS dislikes
+		FROM posts p
+		JOIN users u ON p.user_id = u.id
+		LEFT JOIN (
+			SELECT post_id, COUNT(*) AS comment_count 
+			FROM comments 
+			GROUP BY post_id
+		) c ON p.id = c.post_id
+		LEFT JOIN (
+			SELECT 
+				post_id, 
+				SUM(CASE WHEN reaction_type = 'LIKE' THEN 1 ELSE 0 END) AS likes,
+				SUM(CASE WHEN reaction_type = 'DISLIKE' THEN 1 ELSE 0 END) AS dislikes
+			FROM post_reactions
+			GROUP BY post_id
+		) r ON p.id = r.post_id
+		WHERE p.id = ?;
 	`
 
 	// Variable to hold the fetched post.
 	var post Post
 
 	// Execute the query.
-	err := db.DB.QueryRow(query, postID).Scan(&post.ID, &post.Title, &post.Content, &post.UserName, &post.CreatedAt)
+	err := db.DB.QueryRow(query, postID).Scan(
+		&post.ID,
+		&post.Title,
+		&post.Content,
+		&post.UserName,
+		&post.CreatedAt,
+		&post.CommentCount,
+		&post.Likes,
+		&post.Dislikes,
+	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("post with ID %s not found", postID)
@@ -126,6 +149,7 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	post, err := fetchPostFromDB(postID) // Fetch post data from the database
 	if err != nil {
+		log.Println(err)
 		http.Error(w, "Post not found", http.StatusNotFound)
 		return
 	}
@@ -157,7 +181,7 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.Must(template.ParseFiles("templates/viewPost.html"))
 	if err := tmpl.Execute(w, response); err != nil {
+		log.Println("Template execution error:", err)
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
-		fmt.Println("Template execution error:", err)
 	}
 }
