@@ -63,36 +63,3 @@
   border: 1px solid #ccc;
   border-radius: 5px;
 }
-
-.comment {
-  margin: 10px 0;
-  border-radius: 5px;
-  margin-bottom: 5px;
-}
-
-.comment-header {
-  font-size: 1rem;
-  color: #ccc;
-  font-weight: lighter;
-}
-
-.comment-content {
-  font-size: 1.2rem;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-
-.reply-btn, .view-replies-btn {
-  margin-right: 20px;
-  border: none;
-  border-radius: 5px;
-  padding: 2.5px 5px;
-  background-color: grey;
-  cursor: pointer;
-}
-
-.replies-container {
-  margin-left: 20px;
-  /* Indent for nested replies */
-  padding-left: 10px;
-}
