@@ -154,10 +154,12 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 		Status    string `json:"status"`
 		ID        int64  `json:"id"`
 		CreatedAt string `json:"created_at"`
+		Username string `json:"username"`
 	}{
 		Status:    "success",
 		ID:        id,
 		CreatedAt: createdAt,
+		Username: session.UserName,
 	}
 
 	json.NewEncoder(w).Encode(response)
