@@ -66,11 +66,11 @@ body {
 
 .layout {
   display: grid;
-  
-  grid-template-columns: 240px minmax(400px, 800px) 300px;
+  grid-template-columns: 1fr minmax(400px, 800px) 1fr;
   gap: 24px;
-  width: 95%;
-  margin: 80px auto 0;
+  width: 100%;
+  margin: 0 auto;
+  margin-top: 80px;
   padding: 0 20px;
 }
 
