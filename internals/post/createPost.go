@@ -113,17 +113,14 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
 	}
-	t, err := template.ParseFiles("./templates/index.html")
-	if err != nil {
-		http.Error(w, "Failed to load template", http.StatusInternalServerError)
-		return
-	}
+	t := template.Must(template.ParseFiles("./templates/index.html"))
+	
 	if err := t.Execute(w, map[string]interface{}{
 		"Posts":    posts,
 		"PageData": pageData,
 	}); err != nil {
 		fmt.Println(err)
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 	}
 }
 
