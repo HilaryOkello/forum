@@ -11,7 +11,6 @@ import (
 	"forum/internals/auth"
 )
 
-// GetComments returns all comments for a post
 func GetComments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -24,7 +23,17 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comments, err := getCommentsForPost(postID)
+	// Get the current logged-in user from the session
+	var userID int64
+	session := auth.CheckIfLoggedIn(w, r)
+	if session != nil {
+		userID = int64(session.UserID)
+	} else {
+		userID = 0
+	}
+
+	// Get comments for the post, including the user's reactions
+	comments, err := getCommentsForPost(postID, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -33,21 +42,21 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(comments)
 }
 
-// getCommentsForPost returns all comments for a post
-func getCommentsForPost(postID string) ([]Comment, error) {
-	// Query to get all comments for a post
+func getCommentsForPost(postID string, userID int64) ([]Comment, error) {
+	// Query to get all comments for a post, including the user's reaction
 	query := `
         SELECT 
             c.id, c.post_id, c.user_id, c.parent_id, c.content, c.created_at,
             u.username,
             (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id AND reaction_type = 'LIKE') as likes,
-            (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id AND reaction_type = 'DISLIKE') as dislikes
+            (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id AND reaction_type = 'DISLIKE') as dislikes,
+            (SELECT reaction_type FROM comment_reactions WHERE comment_id = c.id AND user_id = ?) as user_reaction
         FROM comments c
         JOIN users u ON c.user_id = u.id
         WHERE c.post_id = ?
         ORDER BY c.created_at DESC`
 
-	rows, err := db.DB.Query(query, postID)
+	rows, err := db.DB.Query(query, userID, postID)
 	if err != nil {
 		return nil, err
 	}
@@ -60,18 +69,20 @@ func getCommentsForPost(postID string) ([]Comment, error) {
 	for rows.Next() {
 		var comment Comment
 		var ParentID *int64
+		var UserReaction *string
 
 		err := rows.Scan(
 			&comment.ID, &comment.PostID, &comment.UserID, &ParentID,
 			&comment.Content, &comment.CreatedAt, &comment.Username,
-			&comment.Likes, &comment.Dislikes,
+			&comment.Likes, &comment.Dislikes, &UserReaction,
 		)
 		if err != nil {
 			return nil, err
 		}
 
-		// Add the parent ID
+		// Add the parent ID and user reaction
 		comment.ParentID = ParentID
+		comment.UserReaction = UserReaction
 
 		// Add the comment to the map and a temporary list
 		commentMap[comment.ID] = &comment
