@@ -276,8 +276,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     const tempReply = createCommentElement({
                         id: data.id,
                         content: replyContent,
-                        username: "You",
+                        username: data.username,
                         created_at: data.created_at,
+                        likes: 0,
+                        dislikes: 0,
+                        user_reaction: null
                     }, replyLevel, postID);
                     let repliesContainer = comment.nextElementSibling;
                     if (!repliesContainer || !repliesContainer.classList.contains("replies-container")) {
@@ -354,7 +357,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const displayComments = (comments, commentsList, postID) => {
         commentsList.innerHTML = ""; // Clear existing comments
-        commentCount.textContent = `${comments.length} comments`;
+        const totalComments = countComments(comments); // Count all comments, including nested ones
+        commentCount.textContent = `${totalComments} comments`;
         comments.forEach((comment) => renderComment(comment, commentsList, 1, postID));
     };
 
@@ -366,3 +370,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     init();
 });
+
+const countComments = (comments) => {
+    let count = 0;
+    comments.forEach(comment => {
+        count += 1; // Count the current comment
+        if (comment.children && comment.children.length > 0) {
+            count += countComments(comment.children); // Recursively count nested comments
+        }
+    });
+    return count;
+};
