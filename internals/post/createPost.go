@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 
 	"forum/db"
@@ -36,6 +37,7 @@ func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := t.Execute(w, pageData); err != nil {
+		log.Println(err)
 		http.Error(w, "Failed to execute template", http.StatusInternalServerError)
 	}
 }
@@ -120,6 +122,7 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 		"Posts":    posts,
 		"PageData": pageData,
 	}); err != nil {
+		fmt.Println(err)
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 	}
 }
