@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -7,14 +6,10 @@
     <title>The Forum - The Front Page of the Internet</title>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap"
         rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/css/temp.css">
-    <style>
-
-
-    </style>
+    <link rel="stylesheet" href="/static/css/index.css">
+    <link rel="stylesheet" href="/static/css/temp.css" />
 </head>
 
 <body>
@@ -102,25 +97,21 @@
         </nav>
 
         <main class="feed" role="main">
-            <div class="sort-bar">
-                <button class="sort-btn" aria-label="Sort by posts">Posts</button>
-            </div>
-
-            <div class="view-post" id="view-post" post-id="{{ .Post.ID}}">
+            <div class="post" id="view-post" post-id="{{ .Post.ID}}">
                 <div class="votes">
-                    <button class="vote-btn" aria-label="Upvote">
+                    <button class="like-btn" aria-label="Upvote">
                         <i class="fas fa-thumbs-up" aria-hidden="true"></i>
                     </button>
-                    <span>--</span>
-                    <!-- Placeholder for vote count -->
-                    <button class="vote-btn" aria-label="Downvote">
+                    <span>{{ .Post.Likes }}</span>
+                    <button class="dislike-btn" aria-label="Downvote">
                         <i class="fas fa-thumbs-down" aria-hidden="true"></i>
                     </button>
+                    <span>{{ .Post.Dislikes }}</span>
                 </div>
                 <div class="post-content">
-                    <a href="#" class="community-name">Posted by {{ .Post.UserName}}</a>
-                    <h2 class="post-title">{{ .Post.Title}}</h2>
-                    <p>{{ .Post.Content}}</p>
+                    <a href="#" class="community-name">Posted by {{.Post.UserName}}</a>
+                    <h2 class="post-title">{{.Post.Title}}</h2>
+                    <p>{{.Post.Content}}</p>
                     <div class="post-meta">
                         <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt"
                                 aria-hidden="true"></i>
@@ -131,16 +122,16 @@
                             <textarea id="comment-content" placeholder="Write your comment..."></textarea>
                             <button class="btn btn-primary" type="submit">Comment</button>
                         </form>
-
                         <h3>Comments</h3>
                         <div id="comments-list"></div>
                     </div>
                 </div>
+
             </div>
         </main>
 
         <aside class="right-sidebar" role="complementary">
-            <h3 id="trending-title">My contributions</h3>
+            <h3 id="trending-title">My Contributions</h3>
             <div class="trending-card" role="article" aria-labelledby="trending-title">
                 <h4>
                     <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
@@ -165,26 +156,7 @@
         </div>
         <p>2025 MyReddit. All rights reserved.</p>
     </footer>
-
     <script>
-        document.querySelectorAll(".vote-btn").forEach((btn) => {
-            btn.addEventListener("click", function () {
-                const voteCount = this.parentElement.querySelector("span");
-                const currentVotes = parseInt(
-                    voteCount.textContent.replace("k", "000")
-                );
-                this.parentElement
-                    .querySelectorAll(".vote-btn")
-                    .forEach((b) => (b.style.color = "#818384"));
-                if (this.textContent === "▲") {
-                    voteCount.textContent = currentVotes + 1 + "k";
-                    this.style.color = "#FF4500";
-                } else {
-                    voteCount.textContent = currentVotes - 1 + "k";
-                    this.style.color = "#7193FF";
-                }
-            });
-        });
         document.querySelectorAll(".sort-btn").forEach((btn) => {
             btn.addEventListener("click", function () {
                 document.querySelector(".sort-btn.active").classList.remove("active");

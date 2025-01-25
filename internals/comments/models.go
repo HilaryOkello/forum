@@ -11,6 +11,7 @@ type Comment struct {
 	Username  string    `json:"username"`
 	Likes     int       `json:"likes"`
 	Dislikes  int       `json:"dislikes"`
+	UserReaction *string    `json:"user_reaction,omitempty"`
 	Children  []*Comment `json:"children,omitempty"`
 }
 

@@ -1,48 +1,4 @@
-/* Layout responsiveness */
-.layout {
-    display: grid;
-    grid-template-columns: 200px minmax(400px, 700px) 250px;
-    gap: 16px;
-    max-width: 1800px;
-    margin: 0 auto;
-    padding: 20px;
-}
 
-@media (max-width: 1200px) {
-    .layout {
-        grid-template-columns: 200px minmax(400px, 700px) 250px;
-        gap: 16px;
-    }
-}
-
-@media (max-width: 1024px) {
-    .layout {
-        grid-template-columns: minmax(400px, 700px) 250px;
-        gap: 16px;
-    }
-
-    .left-sidebar {
-        display: none;
-    }
-}
-
-@media (max-width: 768px) {
-    .layout {
-        grid-template-columns: 1fr;
-        width: 100%;
-        padding: 0 10px;
-    }
-
-    .right-sidebar {
-        display: none;
-    }
-
-    .post {
-        border-radius: 0;
-    }
-}
-
-/* Comments section styles */
 .comment {
     padding: 12px;
     border-left: 2px solid #343536;
@@ -136,7 +92,7 @@
 }
 
 /* Header and navigation */
-.header {
+/* .header {
     display: flex;
     align-items: center;
     padding: 0 20px;
@@ -171,10 +127,10 @@
 .create-post-btn a {
     color: inherit;
     text-decoration: none;
-}
+} */
 
 /* Vote buttons */
-.votes {
+/* .votes {
     padding: 0 8px;
 }
 
@@ -185,10 +141,10 @@
     background: none;
     border: none;
     cursor: pointer;
-}
+} */
 
 /* User menu */
-.user-dropdown {
+/* .user-dropdown {
     position: relative;
 }
 
@@ -216,7 +172,7 @@
 
 .user-menu-item:hover {
     background: #272729;
-}
+} */
 
 .btn {
     padding: 8px 16px;

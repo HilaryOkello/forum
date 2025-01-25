@@ -11,12 +11,6 @@ body {
     min-height: 100vh;
 }
 
-.container {
-    max-width: 1000px;
-    margin: 100px auto;
-    padding: 0 20px;
-}
-
 .post-container {
     background: #1A1A1B;
     border: 1px solid #343536;
@@ -44,7 +38,7 @@ label {
     font-size: 14px;
 }
 
-input[type="text"],
+.form-group input[type="text"],
 textarea,
 select {
     width: 100%;
@@ -56,7 +50,7 @@ select {
     font-size: 14px;
 }
 
-input[type="text"]:focus,
+.form-group input[type="text"]:focus,
 textarea:focus,
 select:focus {
     border-color: #D7DADC;
@@ -112,7 +106,7 @@ button[type="submit"] {
 }
 
 /* Notification Styles */
-.notification {
+/* .notification {
     position: fixed;
     bottom: 20px;
     right: 20px;
@@ -137,4 +131,4 @@ button[type="submit"] {
 
 .notification.error {
     border-left: 4px solid #ff4500;
-}
+} */
