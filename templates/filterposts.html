@@ -96,30 +96,27 @@
     </nav>
 
     <main class="feed" role="main">
-      <div class="sort-bar">
-        <button class="sort-btn" aria-label="Sort by posts">Posts</button>
-      </div>
       <h1>{{.Category}}</h1>
 
       {{range .Posts}}
-      <div class="post" post-id="{{.ID}}">
+      <div class="post" id="post" post-id="{{ .ID}}">
         <div class="votes">
-          <button class="vote-btn" aria-label="Upvote">
+          <button class="like-btn" aria-label="Upvote">
             <i class="fas fa-thumbs-up" aria-hidden="true"></i>
           </button>
-          <span>--</span>
-          <!-- Placeholder for vote count -->
-          <button class="vote-btn" aria-label="Downvote">
+          <span>{{ .Likes }}</span>
+          <button class="dislike-btn" aria-label="Downvote">
             <i class="fas fa-thumbs-down" aria-hidden="true"></i>
           </button>
+          <span>{{ .Dislikes }}</span>
         </div>
-        <div class="post-content">
-          <a href="/view-post?id={{.ID}}" class="community-name">Posted by {{.UserName}}</a>
+        <div class="post-content list-post" post-id="{{ .ID }}">
+          <a href="#" class="community-name">Posted by {{.UserName}}</a>
           <h2 class="post-title">{{.Title}}</h2>
           <p>{{.Content}}</p>
           <div class="post-meta">
-            <a href="/view-post?id={{.ID}}" aria-label="View comments"><i class="far fa-comment-alt"
-                aria-hidden="true"></i> View Comments</a>
+            <p> {{ .CommentCount }} <i class="far fa-comment-alt" aria-hidden="true"></i></p>
+            <a href="/view-post?id={{.ID }}" aria-label="View Post">View Post</a>
           </div>
         </div>
       </div>
