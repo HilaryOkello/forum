@@ -127,19 +127,24 @@
 
     <aside class="right-sidebar" role="complementary">
       <h3 id="trending-title">My Contributions</h3>
-      <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>
+  
+      <!-- Created Posts Card -->
+      <div class="trending-card" role="article" aria-labelledby="created-posts-title">
+        <button class="contribution-button" id="created-posts" aria-labelledby="created-posts-title">
           <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
-          Created Posts
-        </h4>
+          <span id="created-posts-title">Created Posts</span>
+      </button>
       </div>
-      <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>
-          <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
-          Liked Posts
-        </h4>
+  
+      <!-- Liked Posts Card -->
+      <div class="trending-card" role="article" aria-labelledby="liked-posts-title">
+          <a href="#" class="contribution-link" id="liked-posts" aria-labelledby="liked-posts-title">
+              <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
+              <span id="liked-posts-title">Liked Posts</span>
+          </a>
       </div>
-    </aside>
+  </aside>
+  
   </div>
 
   <footer class="footer" role="contentinfo">
@@ -182,6 +187,78 @@
     userMenu.addEventListener("click", (e) => {
       e.stopPropagation();
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+console.log('DOM loaded');
+// Function to save all current posts to localStorage
+function saveAllPosts() {
+    const posts = Array.from(document.querySelectorAll('.post')).map(post => ({
+        id: post.getAttribute('post-id'),
+        html: post.outerHTML
+    }));
+
+    // Avoid saving if posts haven't changed
+    const currentPosts = JSON.parse(localStorage.getItem('allPosts') || '[]');
+    if (JSON.stringify(posts) !== JSON.stringify(currentPosts)) {
+        localStorage.setItem('allPosts', JSON.stringify(posts));
+    }
+}
+
+// Function to filter posts by user
+function filterPostsByUser() {
+    fetch('/userfilter')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch user posts');
+            }
+            return response.json();
+        })
+        .then(userPostIds => {
+            if (!userPostIds || userPostIds.length === 0) {
+                console.warn("No posts found for this user.");
+                return;
+            }
+
+            // Retrieve all posts from localStorage
+            const allPosts = JSON.parse(localStorage.getItem('allPosts') || '[]');
+
+            // Clear current feed while preserving the sort bar
+            const feedElement = document.querySelector('.feed');
+            const sortBar = feedElement.querySelector('.sort-bar');
+            feedElement.innerHTML = '';
+            feedElement.appendChild(sortBar);
+
+            // Filter and add only user's posts
+            userPostIds.forEach(postId => {
+                const matchingPost = allPosts.find(post => post.id == postId);
+                if (matchingPost) {
+                    const postElement = document.createElement('div');
+                    postElement.innerHTML = matchingPost.html;
+
+                    // Add a class for visual differentiation (optional)
+                    postElement.firstChild.classList.add('user-post');
+                    
+                    feedElement.appendChild(postElement.firstChild);
+                } else {
+                    console.warn(`Post with ID ${postId} not found.`);
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error filtering posts:', error);
+        });
+}
+
+// Add event listener to "Created Posts" link
+document.getElementById('created-posts').addEventListener('click', () => {
+    console.log('Filtering posts by user...');
+     // Prevent default link behavior
+    saveAllPosts(); // Save all posts before filtering
+    filterPostsByUser(); // Filter posts
+});
+});
+
   </script>
   <script src="/static/js/index.js"></script>
 </body>
