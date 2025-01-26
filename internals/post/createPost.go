@@ -94,21 +94,31 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func derefString(s *string) string {
+    if s == nil {
+        return ""
+    }
+    return *s
+}
+
 // ServeHomePage handles requests to render the homepage
 func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 	session := auth.CheckIfLoggedIn(w, r)
+	var userID int64
 	var pageData PageData
 	if session == nil {
 		pageData = PageData{
 			IsLoggedIn: false,
 		}
+		userID = 0
 	} else {
 		pageData = PageData{
 			IsLoggedIn: true,
 			UserName:   session.UserName,
 		}
+		userID = int64(session.UserID)
 	}
-	posts, err := FetchPosts()
+	posts, err := FetchPosts(int64(userID))
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return
@@ -133,7 +143,7 @@ func ServePosts(w http.ResponseWriter, r *http.Request) {
 		UserName:   session.UserName,
 	}
 
-	posts, err := FetchPosts()
+	posts, err := FetchPosts(int64(session.UserID))
 	if err != nil {
 		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
 		return

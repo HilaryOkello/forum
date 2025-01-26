@@ -99,15 +99,15 @@
         <main class="feed" role="main">
             <div class="post" id="view-post" post-id="{{ .Post.ID}}">
                 <div class="votes">
-                    <button class="like-btn" aria-label="Upvote">
-                        <i class="fas fa-thumbs-up" aria-hidden="true"></i>
+                    <button class="like-btn {{if eq .Post.UserReaction `LIKE`}}selected{{end}}" aria-label="Upvote">
+                      <i class="fas fa-thumbs-up" aria-hidden="true"></i>
                     </button>
                     <span>{{ .Post.Likes }}</span>
-                    <button class="dislike-btn" aria-label="Downvote">
-                        <i class="fas fa-thumbs-down" aria-hidden="true"></i>
+                    <button class="dislike-btn {{if eq .Post.UserReaction `DISLIKE`}}selected{{end}}" aria-label="Downvote">
+                      <i class="fas fa-thumbs-down" aria-hidden="true"></i>
                     </button>
                     <span>{{ .Post.Dislikes }}</span>
-                </div>
+                  </div>
                 <div class="post-content">
                     <a href="#" class="community-name">Posted by {{.Post.UserName}}</a>
                     <h2 class="post-title">{{.Post.Title}}</h2>

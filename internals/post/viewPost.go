@@ -22,9 +22,10 @@ type Post struct {
 	CommentCount int
 	Likes        int
 	Dislikes     int
+	UserReaction string `json:"user_reaction,omitempty"`
 }
 
-func FetchPosts() ([]Post, error) {
+func FetchPosts(userID int64) ([]Post, error) {
 	query := `
 		SELECT 
 			p.id, 
@@ -34,7 +35,8 @@ func FetchPosts() ([]Post, error) {
 			p.created_at,
 			COALESCE(c.comment_count, 0) AS comment_count,
 			COALESCE(r.likes, 0) AS likes,
-			COALESCE(r.dislikes, 0) AS dislikes
+			COALESCE(r.dislikes, 0) AS dislikes,
+			COALESCE(pr.reaction_type, '') AS user_reaction -- Use COALESCE to handle NULL
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN (
@@ -50,10 +52,15 @@ func FetchPosts() ([]Post, error) {
 			FROM post_reactions
 			GROUP BY post_id
 		) r ON p.id = r.post_id
+		LEFT JOIN (
+			SELECT post_id, reaction_type
+			FROM post_reactions
+			WHERE user_id = ?
+		) pr ON p.id = pr.post_id
 		ORDER BY p.id DESC;
 	`
 
-	rows, err := db.DB.Query(query)
+	rows, err := db.DB.Query(query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch posts: %w", err)
 	}
@@ -62,6 +69,7 @@ func FetchPosts() ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
+
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
@@ -71,10 +79,12 @@ func FetchPosts() ([]Post, error) {
 			&post.CommentCount,
 			&post.Likes,
 			&post.Dislikes,
+			&post.UserReaction, // Directly scan into a string
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
+
 		posts = append(posts, post)
 	}
 
@@ -86,8 +96,8 @@ func FetchPosts() ([]Post, error) {
 }
 
 // fetchPostFromDB retrieves a post by its ID from the database.
-func fetchPostFromDB(postID string) (*Post, error) {
-	// SQL query to fetch the post with additional fields.
+func fetchPostFromDB(postID string, userID int64) (*Post, error) {
+	// SQL query to fetch the post with additional fields, including the user's reaction.
 	query := `
 		SELECT 
 			p.id, 
@@ -97,7 +107,8 @@ func fetchPostFromDB(postID string) (*Post, error) {
 			p.created_at,
 			COALESCE(c.comment_count, 0) AS comment_count,
 			COALESCE(r.likes, 0) AS likes,
-			COALESCE(r.dislikes, 0) AS dislikes
+			COALESCE(r.dislikes, 0) AS dislikes,
+			COALESCE(pr.reaction_type, '') AS user_reaction -- Fetch user's reaction or default to empty string
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN (
@@ -113,6 +124,11 @@ func fetchPostFromDB(postID string) (*Post, error) {
 			FROM post_reactions
 			GROUP BY post_id
 		) r ON p.id = r.post_id
+		LEFT JOIN (
+			SELECT post_id, reaction_type
+			FROM post_reactions
+			WHERE user_id = ?
+		) pr ON p.id = pr.post_id
 		WHERE p.id = ?;
 	`
 
@@ -120,7 +136,7 @@ func fetchPostFromDB(postID string) (*Post, error) {
 	var post Post
 
 	// Execute the query.
-	err := db.DB.QueryRow(query, postID).Scan(
+	err := db.DB.QueryRow(query, userID, postID).Scan(
 		&post.ID,
 		&post.Title,
 		&post.Content,
@@ -129,6 +145,7 @@ func fetchPostFromDB(postID string) (*Post, error) {
 		&post.CommentCount,
 		&post.Likes,
 		&post.Dislikes,
+		&post.UserReaction, // Populate the UserReaction field
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -147,29 +164,34 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := fetchPostFromDB(postID) // Fetch post data from the database
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "Post not found", http.StatusNotFound)
-		return
-	}
-
 	// Check if the user is logged in
 	session := auth.CheckIfLoggedIn(w, r)
 
 	// Create the PageData object
 	var pageData PageData
 
+	var userID int64
+
 	if session == nil {
 		pageData = PageData{
 			IsLoggedIn: false,
 		}
+		userID = 0
 	} else {
 		pageData = PageData{
 			IsLoggedIn: true,
 			UserName:   session.UserName,
 		}
+		userID = int64(session.UserID)
 	}
+
+	post, err := fetchPostFromDB(postID, userID) // Fetch post data from the database
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "Post not found", http.StatusNotFound)
+		return
+	}
+
 
 	response := struct {
 		PageData
