@@ -24,11 +24,11 @@
     </div>
 
     <div class="nav-right">
-      <a href="/" class="nav-link"></a> <!-- redirect to homepage after successful creation for post. -->
+      <a href="/" class="nav-link"></a> 
       <button class="create-post-btn" aria-label="Create new post">
         <a href="/create-post-form">Create-Post</a>
       </button>
-      <div id="notification" class="hidden"></div> <!-- for notification pop-up -->
+      <div id="notification" class="hidden"></div> 
       <button class="nav-btn" aria-label="Notifications">
         <i class="far fa-bell" aria-hidden="true"></i>
       </button>
@@ -127,63 +127,97 @@
 
     <aside class="right-sidebar" role="complementary">
       <h3 id="trending-title">My Contributions</h3>
-      <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>
+  
+      <!-- Created Posts Card -->
+      <div class="trending-card" role="article" aria-labelledby="created-posts-title">
+        <a href="#" class="contribution-link" id="created-posts" aria-labelledby="created-posts-title">
+        
           <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
-          Created Posts
-        </h4>
+          <span id="created-posts-title">Created Posts</span>
+        </a>
       </div>
-      <div class="trending-card" role="article" aria-labelledby="trending-title">
-        <h4>
-          <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
-          Liked Posts
-        </h4>
+  
+      <!-- Liked Posts Card -->
+      <div class="trending-card" role="article" aria-labelledby="liked-posts-title">
+          <a href="#" class="contribution-link" id="liked-posts" aria-labelledby="liked-posts-title">
+              <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
+              <span id="liked-posts-title">Liked Posts</span>
+          </a>
       </div>
-    </aside>
+  </aside>
+  
+  </div>
+
+  <button class="filter-button" aria-label="Show filters">
+    <i class="fas fa-filter"></i>
+  </button>
+
+  <div class="filter-menu" role="dialog" aria-label="Filter options">
+    <button class="close-filter" aria-label="Close filter menu">
+      <i class="fas fa-times"></i>
+    </button>
+    <div class="filter-menu-content">
+      <div class="filter-section">
+        <h3>Categories</h3>
+        <a href="/category?name=technology" class="sidebar-link">
+          <i class="fas fa-microchip"></i> Technology
+        </a>
+        <a href="/category?name=entertainment" class="sidebar-link">
+          <i class="fas fa-music"></i> Music
+        </a>
+        <a href="/category?name=politics" class="sidebar-link">
+          <i class="fas fa-landmark"></i> Politics
+        </a>
+        <a href="/category?name=sports" class="sidebar-link">
+          <i class="fas fa-basketball-ball"></i> Sports
+        </a>
+        <a href="/category?name=health" class="sidebar-link">
+          <i class="fas fa-heartbeat"></i> Health
+        </a>
+        <a href="/category?name=education" class="sidebar-link">
+          <i class="fas fa-graduation-cap"></i> Education
+        </a>
+        <a href="/category?name=travel" class="sidebar-link">
+          <i class="fas fa-plane"></i> Travel
+        </a>
+        <a href="/category?name=food" class="sidebar-link">
+          <i class="fas fa-utensils"></i> Food
+        </a>
+        <a href="/category?name=business" class="sidebar-link">
+          <i class="fas fa-briefcase"></i> Business
+        </a>
+        <a href="/category?name=lifestyle" class="sidebar-link">
+          <i class="fas fa-cogs"></i> Lifestyle
+        </a>
+      </div>
+
+      <div class="filter-section">
+        <h3>My Contributions</h3>
+        <div class="trending-card">
+          <a href="#" class="contribution-link" id="created-posts">
+            <i class="fas fa-pencil-alt"></i>
+            <span>Created Posts</span>
+          </a>
+        </div>
+        <div class="trending-card">
+          <a href="#" class="contribution-link" id="liked-posts">
+            <i class="fas fa-heart"></i>
+            <span>Liked Posts</span>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 
   <footer class="footer" role="contentinfo">
     <div class="footer-links">
       <a href="/about">About</a>
-      <a href="/privacy">Privacy Policy</a>
-      <a href="/terms">Terms of Service</a>
-      <a href="/contact">Contact Us</a>
     </div>
     <p>2025 MyReddit. All rights reserved.</p>
   </footer>
-  <script>
-    document.querySelectorAll(".sort-btn").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        document.querySelector(".sort-btn.active").classList.remove("active");
-        this.classList.add("active");
-      });
-    });
-    window.addEventListener("load", () => {
-      const layout = document.querySelector(".layout");
-      const updateLayout = () => {
-        const windowWidth = window.innerWidth;
-        const contentWidth = Math.min(1600, windowWidth * 0.95);
-        layout.style.maxWidth = `${contentWidth}px`;
-      };
-      updateLayout();
-      window.addEventListener("resize", updateLayout);
-    });
-    const userBtn = document.querySelector(".user-dropdown .nav-btn");
-    const userMenu = document.querySelector(".user-menu");
-    userBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      userMenu.classList.toggle("show");
-    });
-    document.addEventListener("click", (e) => {
-      if (!userMenu.contains(e.target)) {
-        userMenu.classList.remove("show");
-      }
-    });
-    userMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-  </script>
-  <script src="/static/js/index.js"></script>
+
+  
+  <script src="/static/js/filter.js"></script>
 </body>
 
 </html>

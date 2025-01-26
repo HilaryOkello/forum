@@ -32,6 +32,9 @@ func main() {
 	mux.HandleFunc("/view-post", post.ViewPost)
 	mux.HandleFunc("/category", post.ViewPostsByCategory)
 
+	mux.HandleFunc("/userfilter", auth.Middleware(http.HandlerFunc(post.FilterbyUser)))
+	mux.HandleFunc("/likesfilter", auth.Middleware(http.HandlerFunc(post.FilterbyLikes)))
+
 	// Comment Routes
 	mux.HandleFunc("/comments", comments.GetComments)
 	mux.HandleFunc("/comments/create", auth.Middleware(http.HandlerFunc(comments.CreateComment)))
