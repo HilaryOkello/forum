@@ -16,6 +16,7 @@ import (
 )
 
 var store = NewSessionStore()
+var originalURL string
 
 var tmpl = template.Must(template.ParseGlob("templates/*.html"))
 
@@ -98,6 +99,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Middleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		originalURL = r.URL.Path
 		session := CheckIfLoggedIn(w, r)
 
 		if session == nil {

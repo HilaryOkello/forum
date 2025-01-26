@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ./forum.db:/app/forum.db
+    environment:
+      - GIN_MODE=release
