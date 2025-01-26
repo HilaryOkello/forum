@@ -18,10 +18,9 @@ func FilterbyUser(w http.ResponseWriter, r *http.Request) {
 		sendErrorResponse(w, "User not logged in", http.StatusUnauthorized)
 		return
 	}
-	user := session.UserName
-	fmt.Println(user)
+
 	// Fetch the posts for the given user
-	posts, err := FetchPostsByUser(user)
+	posts, err := FetchPostsByUser(session.UserName, int64(session.UserID))
 	
 	if err != nil {
 		sendErrorResponse(w, "Error fetching posts", http.StatusInternalServerError)
@@ -39,9 +38,9 @@ func FilterbyUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(postIDs)
 }
 
-func FetchPostsByUser(userName string) ([]Post, error) {
+func FetchPostsByUser(userName string, userID int64) ([]Post, error) {
 	var userPosts []Post
-	allPosts, err := FetchPosts()
+	allPosts, err := FetchPosts(userID)
 	if err != nil {
 		return nil, err
 	}

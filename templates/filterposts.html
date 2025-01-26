@@ -725,11 +725,11 @@ body {
       {{range .Posts}}
       <div class="post" id="post" post-id="{{ .ID}}">
         <div class="votes">
-          <button class="like-btn" aria-label="Upvote">
+          <button class="like-btn {{if eq .UserReaction `LIKE`}}selected{{end}}" aria-label="Upvote">
             <i class="fas fa-thumbs-up" aria-hidden="true"></i>
           </button>
           <span>{{ .Likes }}</span>
-          <button class="dislike-btn" aria-label="Downvote">
+          <button class="dislike-btn {{if eq .UserReaction `DISLIKE`}}selected{{end}}" aria-label="Downvote">
             <i class="fas fa-thumbs-down" aria-hidden="true"></i>
           </button>
           <span>{{ .Dislikes }}</span>
