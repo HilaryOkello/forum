@@ -1,134 +1,183 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'IBM Plex Sans', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 body {
-    background: #030303;
-    color: #D7DADC;
-    min-height: 100vh;
+  background: #030303;
+  color: #d7dadc;
+  min-height: 100vh;
 }
 
 .post-container {
-    background: #1A1A1B;
-    border: 1px solid #343536;
-    border-radius: 4px;
+  background: #1a1a1b;
+  border: 1px solid #343536;
+  border-radius: 4px;
 }
 
 h2 {
-    padding: 20px;
-    border-bottom: 1px solid #343536;
+  padding: 20px;
+  border-bottom: 1px solid #343536;
 }
 
 .form-group {
-    padding: 20px;
-    border-bottom: 1px solid #343536;
+  padding: 20px;
+  border-bottom: 1px solid #343536;
 }
 
 .form-group:last-of-type {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 label {
-    display: block;
-    margin-bottom: 8px;
-    color: #818384;
-    font-size: 14px;
+  display: block;
+  margin-bottom: 8px;
+  color: #818384;
+  font-size: 14px;
 }
 
 .form-group input[type="text"],
 textarea,
 select {
-    width: 100%;
-    padding: 10px;
-    background: #1A1A1B;
-    border: 1px solid #343536;
-    border-radius: 4px;
-    color: #D7DADC;
-    font-size: 14px;
+  width: 100%;
+  padding: 10px;
+  background: #1a1a1b;
+  border: 1px solid #343536;
+  border-radius: 4px;
+  color: #d7dadc;
+  font-size: 14px;
 }
 
 .form-group input[type="text"]:focus,
 textarea:focus,
 select:focus {
-    border-color: #D7DADC;
-    outline: none;
+  border-color: #d7dadc;
+  outline: none;
 }
 
 textarea {
-    min-height: 200px;
-    resize: vertical;
+  min-height: 200px;
+  resize: vertical;
 }
 
 select {
-    background: #1A1A1B;
-    min-height: 100px;
+  background: #1a1a1b;
+  min-height: 100px;
 }
 
 select option {
-    padding: 8px;
+  padding: 8px;
 }
 
 small {
-    display: block;
-    margin-top: 8px;
-    color: #818384;
-    font-size: 12px;
+  display: block;
+  margin-top: 8px;
+  color: #818384;
+  font-size: 12px;
 }
 
 .button-container {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px;
 }
 
 button {
-    padding: 8px 16px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 button[type="submit"] {
-    background: #D7DADC;
-    border: none;
-    color: #1A1A1B;
+  background: #d7dadc;
+  border: none;
+  color: #1a1a1b;
 }
 
 .cancel-button {
-    background: transparent;
-    border: 1px solid #343536;
-    color: #D7DADC;
+  background: transparent;
+  border: 1px solid #343536;
+  color: #d7dadc;
 }
 
-/* Notification Styles */
-/* .notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 12px 24px;
-    border-radius: 4px;
-    background: #1A1A1B;
-    border: 1px solid #343536;
-    color: #D7DADC;
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.3s ease;
+/* Add this to your static/css/post.css file */
+.notification-container {
+  position: fixed;
+  top: 80px; /* Positioned below your header */
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  padding: 15px 20px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  max-width: 400px;
+  transform: translateX(120%);
+  transition: transform 0.3s ease-in-out;
+  font-family: "IBM Plex Sans", sans-serif;
 }
 
 .notification.show {
-    transform: translateY(0);
-    opacity: 1;
+  transform: translateX(0);
 }
 
 .notification.success {
-    border-left: 4px solid #46d160;
+  border-left: 4px solid #4caf50;
 }
 
 .notification.error {
-    border-left: 4px solid #ff4500;
-} */
+  border-left: 4px solid #f44336;
+}
+
+.notification.warning {
+  border-left: 4px solid #ff9800;
+}
+
+.notification-icon {
+  font-size: 20px;
+}
+
+.notification.success .notification-icon {
+  color: #4caf50;
+}
+
+.notification.error .notification-icon {
+  color: #f44336;
+}
+
+.notification.warning .notification-icon {
+  color: #ff9800;
+}
+
+.notification-content {
+  flex-grow: 1;
+  color: #1a1a1a;
+}
+
+.notification-close {
+  color: #666;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.notification-close:hover {
+  color: #333;
+}
