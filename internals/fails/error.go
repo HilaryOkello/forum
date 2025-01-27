@@ -1,6 +1,7 @@
 package fails
 
 import (
+	"encoding/json"
 	"html/template"
 	"net/http"
 )
@@ -47,4 +48,13 @@ func ErrorPageHandler(w http.ResponseWriter, r *http.Request, status int) {
 		Title: errorTitles[status],
 	}
 	tmpl.Execute(w, data)
+}
+
+func JSONError(w http.ResponseWriter, status int, message string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{
+		"error":   http.StatusText(status),
+		"message": message,
+	})
 }
