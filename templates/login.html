@@ -55,6 +55,7 @@
       position: relative;
       overflow: hidden;
       border: 1px solid #343536;
+      -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
       z-index: 1;
       animation: container-entrance 0.6s ease-out;
@@ -242,11 +243,15 @@
       const errorMessage = document.getElementById('errorMessage');
       const button = document.querySelector('button');
 
+  
+
       // Create FormData object
       const formData = new FormData();
       formData.append('email', email);
+
       formData.append('password', password);
 
+    
       try {
         const response = await fetch('/login', {
           method: 'POST',

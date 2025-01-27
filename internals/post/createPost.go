@@ -9,6 +9,7 @@ import (
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 type PageData struct {
@@ -33,7 +34,7 @@ func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	// Parse and execute the template
 	t, err := template.ParseFiles("./templates/post.html")
 	if err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 	if err := t.Execute(w, pageData); err != nil {
@@ -95,10 +96,10 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 }
 
 func derefString(s *string) string {
-    if s == nil {
-        return ""
-    }
-    return *s
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // ServeHomePage handles requests to render the homepage
@@ -124,7 +125,7 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	t := template.Must(template.ParseFiles("./templates/index.html"))
-	
+
 	if err := t.Execute(w, map[string]interface{}{
 		"Posts":    posts,
 		"PageData": pageData,
