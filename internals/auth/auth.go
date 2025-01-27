@@ -104,7 +104,8 @@ func Middleware(next http.Handler) http.HandlerFunc {
 		session := CheckIfLoggedIn(w, r)
 
 		if session == nil {
-			http.Redirect(w, r, "/login", http.StatusFound)
+			w.WriteHeader(http.StatusUnauthorized)
+			//http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 
