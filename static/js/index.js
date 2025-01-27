@@ -6,6 +6,10 @@ commentForm.addEventListener("submit", async (event) => {
     const postID = document.getElementById("view-post").getAttribute("post-id");
     const content = document.getElementById("comment-content").value;
 
+    if (!content.trim()) {
+        alert("Comment cannot be empty.");
+        return;
+    }
     try {
         const response = await fetch(`/comments/create`, {
             method: "POST",
@@ -20,6 +24,10 @@ commentForm.addEventListener("submit", async (event) => {
         });
 
         const text = await response.text();
+        if (response.status === 400) {
+            alert("Comment cannot be empty.");
+            return;
+        }
         if (!response.ok || text.startsWith("<")) {
             window.location.href = "/login";
             return;
