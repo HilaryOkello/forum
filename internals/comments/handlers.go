@@ -3,30 +3,39 @@ package comments
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 func ReactToComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
+	}
+
 	// Retrieve the session from the request context
 	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
 	if !ok {
 		// Handle the case where the session is not found in the context
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Session not found in context")
+		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
 		return
 	}
 
 	var input reactToCommentInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Println(err.Error())
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		return
+	}
+
+	if input.CommentID == 0 || input.ReactionType == "" {
+		log.Println("Invalid input")
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -39,8 +48,8 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 
 	err := db.DB.QueryRow(queryCheck, input.CommentID, session.UserID).Scan(&currentReaction)
 	if err != nil && err != sql.ErrNoRows {
-		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err.Error())
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -52,8 +61,8 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
             WHERE comment_id = ? AND user_id = ?`
 		_, err := db.DB.Exec(queryDelete, input.CommentID, session.UserID)
 		if err != nil {
-			fmt.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println(err.Error())
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
 		responseStatus = "removed"
@@ -65,8 +74,8 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
             ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
 		_, err := db.DB.Exec(queryUpsert, input.CommentID, session.UserID, input.ReactionType, input.ReactionType)
 		if err != nil {
-			fmt.Println(err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println(err.Error())
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
 		if currentReaction == "" {
@@ -85,23 +94,23 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err.Error())
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 }
 
 // CreateComment creates a new comment
 func CreateComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
+	}
 	// Retrieve the session from the request context
 	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
 	if !ok {
-		// Handle the case where the session is not found in the context
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		log.Println("Session not found in context")
+		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
 		return
 	}
 
@@ -116,6 +125,12 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	if input.PostID == 0 || input.Content == "" {
+		log.Println("Invalid input")
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		return
+	}
+
 	var id int64
 	var createdAt string
 
@@ -124,8 +139,8 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	// Execute the query and scan the result into the id and createdAt variables
 	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, session.UserID).Scan(&id, &createdAt)
 	if err != nil {
-		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err.Error())
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -146,13 +161,13 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 
 func GetComments(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
 		return
 	}
 
 	postID := r.URL.Query().Get("post_id")
 	if postID == "" {
-		http.Error(w, "post_id is required", http.StatusBadRequest)
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -168,7 +183,7 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 	// Get comments for the post, including the user's reactions
 	comments, err := getPostComments(postID, userID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
