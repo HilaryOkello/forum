@@ -5,7 +5,10 @@ commentForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     const postID = document.getElementById("view-post").getAttribute("post-id");
     const content = document.getElementById("comment-content").value;
-
+    if (!content.trim()) {
+        alert("Comment cannot be empty.");
+        return;
+    }
     try {
         const response = await fetch(`/comments/create`, {
             method: "POST",
@@ -20,8 +23,8 @@ commentForm.addEventListener("submit", async (event) => {
         });
 
         const text = await response.text();
-        if (!response.ok || text.startsWith("<")) {
-            window.location.href = "/login";
+        if (!response.ok || response.status===401) {
+            alert("Please login to post a comment.");
             return;
         }
 
@@ -102,9 +105,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const text = await response.text(); // Read the response as text first
-            if (!response.ok || text.startsWith("<")) {
-                // Redirect to login if the response is HTML or not OK
-                window.location.href = "/login";
+            if (!response.ok || response.status === 401) {
+                alert("Please login to react to a comment.");
                 return;
             }
 
@@ -180,8 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
         })
             .then((response) => {
                 return response.text().then((text) => {
-                    if (!response.ok || text.startsWith("<")) {
-                        window.location.href = "/login";
+                    if (!response.ok || response.status === 401) {
+                        alert("Please login to post a reply.");
                         return;
                     }
                     return JSON.parse(text);
