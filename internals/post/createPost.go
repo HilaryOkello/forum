@@ -39,7 +39,7 @@ func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := t.Execute(w, pageData); err != nil {
 		log.Println(err)
-		http.Error(w, "Failed to execute template", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 	}
 }
 
@@ -82,7 +82,7 @@ func FetchCategories() ([]Category, error) {
 func ServeCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := FetchCategories()
 	if err != nil {
-		http.Error(w, "Failed to fetch categories", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -91,19 +91,22 @@ func ServeCategories(w http.ResponseWriter, r *http.Request) {
 
 	// Encode the categories into JSON and send it as a response
 	if err := json.NewEncoder(w).Encode(categories); err != nil {
-		http.Error(w, "Failed to encode categories", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 	}
-}
-
-func derefString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
 
 // ServeHomePage handles requests to render the homepage
 func ServeHomePage(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
+	}
+
 	session := auth.CheckIfLoggedIn(w, r)
 	var userID int64
 	var pageData PageData
@@ -121,7 +124,7 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 	}
 	posts, err := FetchPosts(int64(userID))
 	if err != nil {
-		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 	t := template.Must(template.ParseFiles("./templates/index.html"))
@@ -131,7 +134,7 @@ func ServeHomePage(w http.ResponseWriter, r *http.Request) {
 		"PageData": pageData,
 	}); err != nil {
 		fmt.Println(err)
-		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 	}
 }
 
@@ -146,7 +149,7 @@ func ServePosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := FetchPosts(int64(session.UserID))
 	if err != nil {
-		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -161,7 +164,7 @@ func ServePosts(w http.ResponseWriter, r *http.Request) {
 
 	// Encode and send JSON response
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 }
@@ -171,20 +174,58 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session) // Replace *Session with your session type
 	if !ok {
 		// Handle the case where the session is not found in the context
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+		return
+	}
+
+	if db.DB == nil {
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
+		log.Println("Database connection is not initialized.")
+		return
+	}
+
+	// Ensure the request method is POST
+	if r.Method != http.MethodPost {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Parse the form data
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Unable to parse form data", http.StatusBadRequest)
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		return
 	}
 
 	title := r.FormValue("title")
 	content := r.FormValue("content")
 	categoryIDs := r.Form["categories[]"]
+
+
+	// Check if required fields are present and validate inputs.
+	if title == "" || content == " " || len(categoryIDs) == 0 {
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		return
+	}
+
+	// Additional validation for content length
+	if len(title) > 50 {
+		fails.JSONError(w, http.StatusBadRequest, "Title exceeds 50 characters.")
+		log.Println("Title exceeds 50 characters.")
+		return
+	}
+
+	if len(content) < 5 {
+		fails.JSONError(w, http.StatusBadRequest, "Content is too short.")
+		log.Println("Content is too short.")
+		return
+	}
+
+	if len(content) > 500 {
+		fails.JSONError(w, http.StatusBadRequest, "Content exceed Limit.")
+		log.Println("Content exceed Limit.")
+		return
+	}
 
 	// Use the user ID from the session
 	userID := session.UserID
@@ -193,14 +234,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
 	result, err := db.DB.Exec(postQuery, userID, title, content)
 	if err != nil {
-		http.Error(w, "Failed to create post", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
 	// Get the ID of the newly created post
 	postID, err := result.LastInsertId()
 	if err != nil {
-		http.Error(w, "Failed to retrieve post ID", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -208,7 +249,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	for _, categoryID := range categoryIDs {
 		_, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
 		if err != nil {
-			http.Error(w, "Failed to associate category with post", http.StatusInternalServerError)
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
 	}

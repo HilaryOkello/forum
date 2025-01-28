@@ -6,10 +6,12 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 // Post represents a post structure
@@ -158,9 +160,14 @@ func fetchPostFromDB(postID string, userID int64) (*Post, error) {
 }
 
 func ViewPost(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
+	}
+
 	postID := r.URL.Query().Get("id")
 	if postID == "" {
-		http.Error(w, "Post ID is required", http.StatusBadRequest)
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		return
 	}
 
@@ -178,6 +185,12 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		}
 		userID = 0
 	} else {
+		// Validate session data
+        if session.UserID <= 0 || session.UserName == "" {
+            fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+            return
+        }
+
 		pageData = PageData{
 			IsLoggedIn: true,
 			UserName:   session.UserName,
@@ -188,10 +201,21 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	post, err := fetchPostFromDB(postID, userID) // Fetch post data from the database
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "Post not found", http.StatusNotFound)
+		switch {
+		case strings.Contains(err.Error(), "not found"):
+			fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		case strings.Contains(err.Error(), "invaid post ID"):
+			fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		default:
+			fails.ErrorPageHandler(w,r, http.StatusInternalServerError)
+		}
 		return
 	}
 
+	if post == nil || post.ID == 0 {
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
+		return 
+	}
 
 	response := struct {
 		PageData
