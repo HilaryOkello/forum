@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -15,22 +14,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-var (
-	store       = NewSessionStore()
-	originalURL string
-)
-
-
-
-type contextKey string
-
-const UserSessionKey contextKey = "userSession"
-
-// PageData represents the data structure we'll pass to our templates
-type PageData struct {
-	IsLoggedIn bool
-	UserName   string
-}
 
 func Login(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
@@ -44,12 +27,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to read users"})
-			
+
 		}
 		// validate credentials
 		for _, user := range users {
 			if user.Email == email && decryptPassword(user.Password, password) {
-				fmt.Printf("%s logged in successfully\n", user.UserName)
 				if oldsession, ok := store.GetSessionByUserId(user.ID); ok {
 					store.DeleteSession(oldsession.ID)
 				}
@@ -96,7 +78,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Middleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		originalURL = r.URL.Path
 		session := CheckIfLoggedIn(w, r)
 
 		if session == nil {
