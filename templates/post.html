@@ -156,38 +156,7 @@
     </div>
     <p>2025 MyReddit. All rights reserved.</p>
   </footer>
-  <script>
-    document.querySelectorAll(".sort-btn").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        document.querySelector(".sort-btn.active").classList.remove("active");
-        this.classList.add("active");
-      });
-    });
-    window.addEventListener("load", () => {
-      const layout = document.querySelector(".layout");
-      const updateLayout = () => {
-        const windowWidth = window.innerWidth;
-        const contentWidth = Math.min(1600, windowWidth * 0.95);
-        layout.style.maxWidth = `${contentWidth}px`;
-      };
-      updateLayout();
-      window.addEventListener("resize", updateLayout);
-    });
-    const userBtn = document.querySelector(".user-dropdown .nav-btn");
-    const userMenu = document.querySelector(".user-menu");
-    userBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      userMenu.classList.toggle("show");
-    });
-    document.addEventListener("click", (e) => {
-      if (!userMenu.contains(e.target)) {
-        userMenu.classList.remove("show");
-      }
-    });
-    userMenu.addEventListener("click", (e) => {
-      e.stopPropagation();
-    });
-  </script>
+  <script src="/static/js/index.js"></script>
   <script src="/static/js/post.js"></script>
 </body>
 
