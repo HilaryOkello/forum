@@ -97,9 +97,9 @@
       </div>
     </nav>
 
-    <main class="feed" role="main">
+        <main class="feed" role="main">
       <h1>{{.Category}}</h1>
-
+      {{if gt (len .Posts) 0}}
       {{range .Posts}}
       <div class="post" id="post" post-id="{{ .ID}}">
         <div class="votes">
@@ -122,6 +122,9 @@
           </div>
         </div>
       </div>
+      {{end}}
+      {{else}}
+      <p>No posts in this category</p>
       {{end}}
     </main>
   </div> 
