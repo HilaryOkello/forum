@@ -47,6 +47,11 @@ commentForm.addEventListener("submit", async (event) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+    const escapeHTML = (str) => {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    };
     const commentCount = document.getElementById("comment-count");
     const viewPostContainer = document.getElementById("view-post");
 
@@ -75,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="comment-author">${commentData.username}</span>
                 <span class="comment-time">${new Date(commentData.created_at).toLocaleString()}</span>
             </div>
-            <p class="comment-content">${commentData.content}</p>
+            <p class="comment-content">${escapeHTML(commentData.content)}</p>
             <div class="reaction-container">
                 <button class="thumbs-up ${commentData.user_reaction === "LIKE" ? "selected" : ""}">
                     <i class="fa-solid fa-thumbs-up"></i> <span>${commentData.likes}</span>
