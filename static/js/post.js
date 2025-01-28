@@ -75,8 +75,8 @@ const notificationManager = new NotificationManager();
 document.querySelector("form").addEventListener("submit", function (event) {
   event.preventDefault();
 
-  const title = document.getElementById("title").value;
-  const content = document.getElementById("content").value;
+  const title = document.getElementById("title").value.trim();
+  const content = document.getElementById("content").value.trim();
   const categories = Array.from(
     document.getElementById("categories").selectedOptions
   ).map((option) => option.value);
@@ -84,6 +84,10 @@ document.querySelector("form").addEventListener("submit", function (event) {
   // Validate inputs
   if (title.length > 50) {
     notificationManager.show("Title exceeds 50 characters.", "error");
+    return;
+  }
+  if (title.length < 2) {
+    notificationManager.show("Title is too short.", "error");
     return;
   }
 
