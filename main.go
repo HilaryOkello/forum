@@ -23,6 +23,7 @@ func main() {
 	// public routes
 	mux.HandleFunc("/posts", post.ServePosts)
 	mux.HandleFunc("/", post.ServeHomePage)
+	mux.HandleFunc("/about", post.ServeAboutPage)
 
 	mux.HandleFunc("/login", auth.Login)
 	mux.HandleFunc("/logout", auth.Logout)
