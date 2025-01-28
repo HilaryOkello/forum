@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Function to handle filtering posts by created posts
     function setupPostFilters() {
-        // Get all instances of created-posts and liked-posts links (both in sidebar and filter menu)
         const createdPostLinks = document.querySelectorAll('#created-posts');
         const likedPostLinks = document.querySelectorAll('#liked-posts');
 
@@ -37,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Call the setup function
     setupPostFilters();
     saveAllPosts();
-    console.log('DOM loaded');
+    
     // Function to save all current posts to localStorage
     function saveAllPosts() {
         const posts = Array.from(document.querySelectorAll('.post')).map(post => ({
@@ -83,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const postElement = document.createElement('div');
                         postElement.innerHTML = matchingPost.html;
 
-                        // Add a class for visual differentiation (optional)
+                        
                         postElement.firstChild.classList.add('user-post');
 
                         feedElement.appendChild(postElement.firstChild);
@@ -93,14 +92,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             })
             .catch(error => {
-                console.error('Error filtering posts:', error);
+               
+                if (error.name === 'SyntaxError') {
+                    alert('Please log in to filter posts by user.');
+                } else {
+                    console.error('Error filtering posts:', error);
+                    alert('Error filtering posts. Please try again.');
+                }
             });
     }
 
-    // Add event listener to "Created Posts" link
+    
     document.getElementById('created-posts').addEventListener('click', (event) => {
-        event.preventDefault(); // Prevent default link behavior
-        // Prevent default link behavior
+        event.preventDefault(); 
         filterPostsByUser(); // Filter posts
     });
 
@@ -145,7 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             })
             .catch(error => {
-                console.error('Error filtering posts:', error);
+                if (error.name === 'SyntaxError') {
+                    alert('Please log in to filter posts by likes.');
+                } else {
+                    console.error('Error filtering posts:', error);
+                    alert('Error filtering posts. Please try again.');
+                }
+                
             });
     }
 
