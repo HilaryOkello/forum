@@ -10,32 +10,21 @@ import (
 	"time"
 
 	"forum/db"
+	"forum/internals/fails"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
-var store = NewSessionStore()
-var originalURL string
+var (
+	store       = NewSessionStore()
+	originalURL string
+)
 
-var tmpl = template.Must(template.ParseGlob("templates/*.html"))
+
 
 type contextKey string
 
 const UserSessionKey contextKey = "userSession"
-
-func encryptPassword(password string) (string, error) {
-	bcryptPassword, error := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if error != nil {
-		return "", error
-	}
-	return string(bcryptPassword), nil
-}
-
-func decryptPassword(hashedPassword, password string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
-}
 
 // PageData represents the data structure we'll pass to our templates
 type PageData struct {
@@ -44,12 +33,19 @@ type PageData struct {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		ipAddress := r.RemoteAddr
-		fmt.Printf("email: %s, password: %s\n", email, password)
 		users := ReadfromDb()
+
+		if users == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to read users"})
+			
+		}
 		// validate credentials
 		for _, user := range users {
 			if user.Email == email && decryptPassword(user.Password, password) {
@@ -91,7 +87,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	} else if r.Method == http.MethodGet {
 		if err := tmpl.ExecuteTemplate(w, "login.html", nil); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -99,7 +96,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func Middleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		originalURL = r.URL.Path
 		session := CheckIfLoggedIn(w, r)
 
@@ -140,17 +136,44 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
+	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	if r.Method == http.MethodGet {
-		tmpl.ExecuteTemplate(w, "signup.html", nil)
+		err := tmpl.ExecuteTemplate(w, "signup.html", nil)
+		if err != nil {
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
+			return
+		}
 	} else if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		name := r.FormValue("username") // Changed from "name" to match the form
+		// Create a slice to collect validation errors
+		var errors []string
 
-		if email == "" || password == "" || name == "" {
+		// Validate email
+		if !isValidEmail(email) {
+			errors = append(errors, "Invalid email format")
+		}
+
+		// Validate username
+		if !isValidUsername(name) {
+			errors = append(errors, "Username must be 3-30 characters long and contain only letters, numbers, underscores, or hyphens")
+		}
+
+		// Validate password (example requirements)
+		if len(password) < 8 {
+			errors = append(errors, "Password must be at least 8 characters long")
+		}
+
+		// If there are any validation errors, return them
+		if len(errors) > 0 {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{"error": "All fields are required"})
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status": "error",
+				"error":  errors,
+			})
+
 			return
 		}
 
@@ -159,6 +182,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
+
 			return
 		}
 
@@ -188,7 +212,14 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 func ReadfromDb() []User {
 	users := []User{}
-	rows, err := db.DB.Query("SELECT id, username, email, password, created_at FROM users")
+	stmt, err := db.DB.Prepare("SELECT id, username, email, password, created_at FROM users")
+	if err != nil {
+		log.Printf("Error preparing statement: %v", err)
+		return users
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
 	if err != nil {
 		log.Printf("Error querying users: %v", err)
 		return users

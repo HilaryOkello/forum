@@ -8,6 +8,7 @@ import (
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 // FetchPostsByCategory retrieves posts from the database filtered by category
@@ -92,7 +93,8 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("name")
 
 	if category == "" {
-		http.Error(w, "Category is required", http.StatusBadRequest)
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+
 		return
 	}
 
@@ -118,7 +120,7 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	// Fetch the posts for the given category
 	posts, err := FetchPostsByCategory(category, userID)
 	if err != nil {
-		http.Error(w, "Failed to fetch posts", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		return
 	}
 
@@ -138,7 +140,7 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	// Parse and execute the filteredPosts.html template
 	tmpl := template.Must(template.ParseFiles("templates/filterposts.html"))
 	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		fmt.Println("Template execution error:", err)
 	}
 }
