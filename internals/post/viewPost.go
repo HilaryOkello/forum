@@ -228,6 +228,6 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseFiles("templates/viewPost.html"))
 	if err := tmpl.Execute(w, response); err != nil {
 		log.Println("Template execution error:", err)
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 	}
 }
