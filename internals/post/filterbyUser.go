@@ -21,7 +21,6 @@ func FilterbyUser(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch the posts for the given user
 	posts, err := FetchPostsByUser(session.UserName, int64(session.UserID))
-	
 	if err != nil {
 		sendErrorResponse(w, "Error fetching posts", http.StatusInternalServerError)
 		return
@@ -70,15 +69,13 @@ func FilterbyLikes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := session.UserID
-	fmt.Println(user)
 	// Fetch the posts for the given user
 	posts, err := FetchPostsByLikes(user)
-	fmt.Println(posts)
 	if err != nil {
 		sendErrorResponse(w, "Error fetching posts", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Set JSON content type and send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(posts)
