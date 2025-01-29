@@ -1,36 +1,32 @@
-# Start from the official Go image
-FROM golang:1.23.4-alpine as builder
+# Build stage
+FROM golang:1.23.4-alpine AS builder
 
-# Set working directory inside the container
 WORKDIR /app
 
-# Install dependencies
+# Install build dependencies
 RUN apk add --no-cache git gcc musl-dev
 
-# Copy go mod and sum files first to leverage Docker layer caching
 COPY go.mod go.sum ./
+RUN go mod download
 
-# Download dependencies
-RUN go mod download && go mod verify
-
-# Copy the source code
 COPY . .
 
-# Build the application statically to minimize dependencies
-RUN go build -o forum-app
+# Build the application with additional optimizations
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-w -s" -o forum-app
 
-# Use a smaller image for the final container
+# Final stage
 FROM alpine:latest
 
-# Set working directory
 WORKDIR /app
 
-# Copy only the executable from the builder stage
+# Copy the executable and ALL project files from builder stage
 COPY --from=builder /app/forum-app .
+COPY --from=builder /app/static ./static
+COPY --from=builder /app/templates ./templates
+COPY --from=builder /app/db ./db
+COPY --from=builder /app/forum.db .
 
-# Expose port 8080
+
 EXPOSE 8080
 
-# Run the executable
 CMD ["./forum-app"]
-

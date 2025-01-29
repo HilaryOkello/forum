@@ -231,3 +231,22 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 	}
 }
+
+func ServeAboutPage(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/about" {
+		fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		return
+	}
+
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
+	}
+
+	
+	tmpl := template.Must(template.ParseFiles("templates/about.html"))
+	if err := tmpl.Execute(w, nil); err != nil {
+		log.Println("Template execution error:", err)
+		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
+	}
+}
