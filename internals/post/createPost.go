@@ -14,11 +14,6 @@ import (
 	"forum/internals/fails"
 )
 
-type PageData struct {
-	IsLoggedIn bool
-	UserName   string
-}
-
 func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	session := auth.CheckIfLoggedIn(w, r)
 	var pageData PageData
@@ -45,12 +40,7 @@ func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Category represents a single category
-type Category struct {
-	ID          int
-	Name        string
-	Description string
-}
+
 
 // FetchCategories retrieves categories with descriptions from the database
 func FetchCategories() ([]Category, error) {
