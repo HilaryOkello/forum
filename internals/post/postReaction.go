@@ -11,12 +11,6 @@ import (
 	"forum/internals/fails"
 )
 
-type reactToPost struct {
-	PostID       int64  `json:"post_id"`
-	UserID       int64  `json:"user_id"`
-	ReactionType string `json:"reaction_type"`
-}
-
 func ReactToPost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
