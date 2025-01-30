@@ -11,12 +11,6 @@ import (
 	"forum/internals/auth"
 )
 
-type ImageUploadResult struct {
-	Filename string
-	Error    error
-	mutex    sync.Mutex
-}
-
 var (
 	currentUpload = make(map[int64]*ImageUploadResult)
 	uploadMutex   sync.Mutex
