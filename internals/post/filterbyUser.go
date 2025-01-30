@@ -82,13 +82,13 @@ func FilterbyLikes(w http.ResponseWriter, r *http.Request) {
 }
 
 func FetchPostsByLikes(userID int) ([]int, error) {
-	query := `
-		SELECT post_id
-		FROM post_reactions
-		WHERE user_id = ? AND reaction_type = 'LIKE';
-	`
+	// query := `
+	// 	SELECT post_id
+	// 	FROM post_reactions
+	// 	WHERE user_id = ? AND reaction_type = 'LIKE';
+	// `
 
-	rows, err := db.DB.Query(query, userID)
+	rows, err := db.DB.Query(FetchLikedPostsByUser, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch liked post IDs: %w", err)
 	}
