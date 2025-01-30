@@ -111,6 +111,7 @@
                 <div class="post-content">
                     <a href="#" class="community-name">Posted by {{.Post.UserName}}</a>
                     <h2 class="post-title">{{.Post.Title}}</h2>
+                    <img src="{{.Post.Image}}" alt="{{.Post.Title}}" class="post-image" />
                     <p>{{.Post.Content}}</p>
                     <div class="post-meta">
                         <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt"
@@ -130,21 +131,7 @@
             </div>
         </main>
 
-        <!-- <aside class="right-sidebar" role="complementary">
-            <h3 id="trending-title">My Contributions</h3>
-            <div class="trending-card" role="article" aria-labelledby="trending-title">
-                <h4>
-                    <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
-                    Created Posts
-                </h4>
-            </div>
-            <div class="trending-card" role="article" aria-labelledby="trending-title">
-                <h4>
-                    <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
-                    Liked Posts
-                </h4>
-            </div>
-        </aside> -->
+       
     </div>
 
     <footer class="footer" role="contentinfo">
