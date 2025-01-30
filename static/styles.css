@@ -103,6 +103,33 @@ body {
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
+.post-image {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  max-width: 100%;
+  margin: 12px 0;
+  background: #272729;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.post-image img {
+  max-width: 100%;
+  max-height: 400px; /* Limit height while maintaining aspect ratio */
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.post-image img:hover {
+  transform: scale(1.01);
+  cursor: pointer;
+}
+
 .right-sidebar {
   background: #1A1A1B;
   border: 1px solid #343536;
