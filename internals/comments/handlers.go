@@ -5,27 +5,26 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"forum/db"
 	"forum/internals/auth"
 	"forum/internals/fails"
 )
 
+// ReactToComment handles the reaction to a comment
 func ReactToComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+	if !validateMethod(w, r, http.MethodPost) {
 		return
 	}
 
 	// Retrieve the session from the request context
-	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	session, ok := validateSession(w, r)
 	if !ok {
-		// Handle the case where the session is not found in the context
-		log.Println("Session not found in context")
-		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
-		return
+		return // validateSession already handles the response
 	}
 
+	// Decode the request body into the input struct
 	var input reactToCommentInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Println(err.Error())
@@ -33,20 +32,24 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if input.CommentID == 0 || input.ReactionType == "" {
+	// Check if the input is valid
+	if input.CommentID == 0 {
 		log.Println("Invalid input")
+		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		return
+	}
+
+	// Check if the reaction type is valid
+	validReactions := map[string]bool{"LIKE": true, "DISLIKE": true}
+	if !validReactions[input.ReactionType] {
+		log.Println("Invalid reaction type")
 		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		return
 	}
 
 	// Check the current reaction for the user and comment
 	var currentReaction string
-	queryCheck := `
-        SELECT reaction_type
-        FROM comment_reactions
-        WHERE comment_id = ? AND user_id = ?`
-
-	err := db.DB.QueryRow(queryCheck, input.CommentID, session.UserID).Scan(&currentReaction)
+	err := db.DB.QueryRow(QueryCheckReaction, input.CommentID, session.UserID).Scan(&currentReaction)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println(err.Error())
 		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
@@ -54,12 +57,10 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var responseStatus string
+
+	// If the current reaction is the same as the input, remove the reaction
 	if currentReaction == input.ReactionType {
-		// Remove the reaction if it's the same as the current one
-		queryDelete := `
-            DELETE FROM comment_reactions
-            WHERE comment_id = ? AND user_id = ?`
-		_, err := db.DB.Exec(queryDelete, input.CommentID, session.UserID)
+		_, err := db.DB.Exec(QueryDeleteReaction, input.CommentID, session.UserID)
 		if err != nil {
 			log.Println(err.Error())
 			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
@@ -68,11 +69,7 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		responseStatus = "removed"
 	} else {
 		// Insert or update the reaction
-		queryUpsert := `
-            INSERT INTO comment_reactions (comment_id, user_id, reaction_type)
-            VALUES (?, ?, ?)
-            ON CONFLICT (comment_id, user_id) DO UPDATE SET reaction_type = ?`
-		_, err := db.DB.Exec(queryUpsert, input.CommentID, session.UserID, input.ReactionType, input.ReactionType)
+		_, err := db.DB.Exec(QueryUpsertReaction, input.CommentID, session.UserID, input.ReactionType, input.ReactionType)
 		if err != nil {
 			log.Println(err.Error())
 			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
@@ -91,7 +88,6 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 		"updatedReaction":  input.ReactionType,
 		"previousReaction": currentReaction,
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		log.Println(err.Error())
@@ -102,42 +98,44 @@ func ReactToComment(w http.ResponseWriter, r *http.Request) {
 
 // CreateComment creates a new comment
 func CreateComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
-		return
-	}
-	// Retrieve the session from the request context
-	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
-	if !ok {
-		log.Println("Session not found in context")
-		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+	if !validateMethod(w, r, http.MethodPost) {
 		return
 	}
 
-	var input commentInput
+	// Retrieve the session from the request context
+	session, ok := validateSession(w, r)
+	if !ok {
+		return // validateSession already handles the response
+	}
 
 	// Decode the request body into the input struct
+	var input commentInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		log.Println(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{
-			"status": "failure",
+			"status":  "failure",
+			"message": "Invalid JSON format",
 		})
+		return
 	}
 
+	// Check if the input is valid
 	if input.PostID == 0 || input.Content == "" {
-		log.Println("Invalid input")
-		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+		log.Println("Invalid post ID or empty content")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "failure",
+			"message": "Invalid post ID or empty content",
+		})
 		return
 	}
 
 	var id int64
 	var createdAt string
 
-	query := `INSERT INTO comments (post_id, parent_id, content, user_id) VALUES (?, ?, ?, ?) RETURNING id, created_at`
-
 	// Execute the query and scan the result into the id and createdAt variables
-	err := db.DB.QueryRow(query, input.PostID, input.ParentID, input.Content, session.UserID).Scan(&id, &createdAt)
+	err := db.DB.QueryRow(QueryCreateComment, input.PostID, input.ParentID, input.Content, session.UserID).Scan(&id, &createdAt)
 	if err != nil {
 		log.Println(err.Error())
 		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
@@ -156,18 +154,28 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 		Username:  session.UserName,
 	}
 
-	json.NewEncoder(w).Encode(response)
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Println("Failed to encode JSON response:", err)
+		http.Error(w, `{"status": "failure", "message": "Internal server error"}`, http.StatusInternalServerError)
+	}
 }
 
+// GetComments retrieves comments for a post
 func GetComments(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+	if !validateMethod(w, r, http.MethodGet) {
 		return
 	}
 
-	postID := r.URL.Query().Get("post_id")
-	if postID == "" {
-		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+	// Validate and parse post_id
+	postIDStr := r.URL.Query().Get("post_id")
+	postID, err := strconv.ParseInt(postIDStr, 10, 64)
+	if err != nil || postID <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "failure",
+			"message": "Invalid post_id",
+		})
 		return
 	}
 
@@ -180,12 +188,22 @@ func GetComments(w http.ResponseWriter, r *http.Request) {
 		userID = 0
 	}
 
-	// Get comments for the post, including the user's reactions
-	comments, err := getPostComments(postID, userID)
+	// Fetch comments from the database
+	comments, err := getPostComments(postIDStr, userID)
 	if err != nil {
-		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
+		log.Println("Error fetching comments:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status":  "failure",
+			"message": "Failed to retrieve comments",
+		})
 		return
 	}
 
-	json.NewEncoder(w).Encode(comments)
+	// Encode the comments as JSON and send the response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(comments); err != nil {
+		log.Println("Failed to encode JSON response:", err)
+		http.Error(w, `{"status": "failure", "message": "Internal server error"}`, http.StatusInternalServerError)
+	}
 }

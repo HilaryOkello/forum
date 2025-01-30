@@ -1,29 +1,24 @@
 package comments
 
 import (
+	"log"
+	"net/http"
+
 	"forum/db"
+	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
+// getPostComments retrieves all comments for a post
 func getPostComments(postID string, userID int64) ([]Comment, error) {
-	// Query to get all comments for a post, including the user's reaction
-	query := `
-        SELECT 
-            c.id, c.post_id, c.user_id, c.parent_id, c.content, c.created_at,
-            u.username,
-            (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id AND reaction_type = 'LIKE') as likes,
-            (SELECT COUNT(*) FROM comment_reactions WHERE comment_id = c.id AND reaction_type = 'DISLIKE') as dislikes,
-            (SELECT reaction_type FROM comment_reactions WHERE comment_id = c.id AND user_id = ?) as user_reaction
-        FROM comments c
-        JOIN users u ON c.user_id = u.id
-        WHERE c.post_id = ?
-        ORDER BY c.created_at DESC`
-
-	rows, err := db.DB.Query(query, userID, postID)
+	// Query the database for comments
+	rows, err := db.DB.Query(queryGetPostComments, userID, postID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	// Create a map to store comments by ID
 	commentMap := make(map[int64]*Comment)
 	var rootComments []*Comment
 
@@ -72,4 +67,24 @@ func getPostComments(postID string, userID int64) ([]Comment, error) {
 	}
 
 	return finalRootComments, nil
+}
+
+// validateMethod checks if the request method is the expected one
+func validateMethod(w http.ResponseWriter, r *http.Request, method string) bool {
+	if r.Method != method {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return false
+	}
+	return true
+}
+
+// validateSession checks if the user session is valid
+func validateSession(w http.ResponseWriter, r *http.Request) (*auth.Session, bool) {
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	if !ok {
+		log.Println("Session not found in context")
+		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+		return nil, false
+	}
+	return session, true
 }
