@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("Error initializing database: %v", err)
 	}
 	defer db.Close()
-
+// post.UpdatePostImage(9,"static/images/QVC5ZG24TBI3HHTKBFXU2IEYPQ.jpg")
 	mux := http.NewServeMux()
 	// public routes
 	mux.HandleFunc("/posts", post.ServePosts)
@@ -29,6 +29,7 @@ func main() {
 	mux.HandleFunc("/logout", auth.Logout)
 	mux.HandleFunc("/signup", auth.Signup)
 	mux.HandleFunc("/categories", post.ServeCategories)
+	mux.HandleFunc("/upload-image", auth.Middleware(http.HandlerFunc(post.UploadImage)))
 
 	mux.HandleFunc("/view-post", post.ViewPost)
 	mux.HandleFunc("/category", post.ViewPostsByCategory)
@@ -45,11 +46,7 @@ func main() {
 	mux.HandleFunc("/comments/react", auth.Middleware(http.HandlerFunc(comments.ReactToComment)))
 	// static
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	// // private routes
-	// protected := http.NewServeMux()
-	// protected.HandleFunc("/dashboard", auth.Dashboard)
-
-	// mux.Handle("/dashboard", auth.Middleware(protected))
+	
 
 	fmt.Println("Server running http://localhost:8080/  and go to /login to login")
 	http.ListenAndServe(":8080", mux)
