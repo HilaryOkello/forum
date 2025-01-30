@@ -111,6 +111,33 @@ document.querySelector("form").addEventListener("submit", function (event) {
   postData.append("content", content);
   categories.forEach((category) => postData.append("categories[]", category));
 
+  const image = document.getElementById("image").files[0];
+  const imagedata = new FormData();
+  if (image) {
+    imagedata.append("image", image);
+  
+
+    fetch("/upload-image", {
+      method: "POST",
+      body: imagedata,
+    })
+    .then((response) => {
+      if (!response.ok) {
+        return response.json().then((data) => {
+          throw new Error(data.error || `Error: ${response.statusText}`);
+        });
+      }
+      return response.json();
+    })
+    .then((data) => {
+      notificationManager.show(data.message, "success");
+    })
+    .catch((error) => {
+      notificationManager.show(error.message, "error");
+    });
+  
+}
+
   fetch("/create-post", {
     method: "POST",
     body: postData,
