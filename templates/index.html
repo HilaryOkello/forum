@@ -114,6 +114,9 @@
         <div class="post-content list-post" post-id="{{ .ID }}">
           <a href="#" class="community-name">Posted by {{.UserName}}</a>
           <h2 class="post-title">{{.Title}}</h2>
+          <div class="post-image">
+          <img src="{{.Image}}" alt="{{.Title}}"  />
+        </div>
           <p>{{.Content}}</p>
           <div class="post-meta">
             <p> {{ .CommentCount }}  <i class="far fa-comment-alt" aria-hidden="true"></i></p>

@@ -19,6 +19,7 @@ type Post struct {
 	ID           int
 	Title        string
 	Content      string
+	Image 	  *string
 	UserName     string
 	CreatedAt    time.Time
 	CommentCount int
@@ -33,12 +34,13 @@ func FetchPosts(userID int64) ([]Post, error) {
 			p.id, 
 			p.title, 
 			p.content, 
+			p.image,
 			u.username, 
 			p.created_at,
 			COALESCE(c.comment_count, 0) AS comment_count,
 			COALESCE(r.likes, 0) AS likes,
 			COALESCE(r.dislikes, 0) AS dislikes,
-			COALESCE(pr.reaction_type, '') AS user_reaction -- Use COALESCE to handle NULL
+			COALESCE(pr.reaction_type, '') AS user_reaction
 		FROM posts p
 		JOIN users u ON p.user_id = u.id
 		LEFT JOIN (
@@ -59,7 +61,7 @@ func FetchPosts(userID int64) ([]Post, error) {
 			FROM post_reactions
 			WHERE user_id = ?
 		) pr ON p.id = pr.post_id
-		ORDER BY p.id DESC;
+		ORDER BY p.created_at DESC;
 	`
 
 	rows, err := db.DB.Query(query, userID)
@@ -71,28 +73,41 @@ func FetchPosts(userID int64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
+		var imgPtr *string // Temporary variable to handle NULL image values
 
 		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
+			&imgPtr, // Scan into the temporary image pointer
 			&post.UserName,
 			&post.CreatedAt,
 			&post.CommentCount,
 			&post.Likes,
 			&post.Dislikes,
-			&post.UserReaction, // Directly scan into a string
+			&post.UserReaction,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan post: %w", err)
+			return nil, fmt.Errorf("failed to scan post row: %w", err)
+		}
+
+		// Only set the image if it's not NULL
+		if imgPtr != nil {
+			post.Image = imgPtr
 		}
 
 		posts = append(posts, post)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("row iteration error: %w", err)
+		return nil, fmt.Errorf("error iterating post rows: %w", err)
 	}
+
+	// // Debug logging - remove in production
+	// for _, post := range posts {
+	// 	fmt.Printf("Fetched post: ID=%d, Title=%s, Image=%v\n", 
+	// 		post.ID, post.Title, post.Image)
+	// }
 
 	return posts, nil
 }
@@ -105,6 +120,7 @@ func fetchPostFromDB(postID string, userID int64) (*Post, error) {
 			p.id, 
 			p.title, 
 			p.content, 
+			p.image,
 			u.username, 
 			p.created_at,
 			COALESCE(c.comment_count, 0) AS comment_count,
@@ -142,6 +158,7 @@ func fetchPostFromDB(postID string, userID int64) (*Post, error) {
 		&post.ID,
 		&post.Title,
 		&post.Content,
+		&post.Image,
 		&post.UserName,
 		&post.CreatedAt,
 		&post.CommentCount,

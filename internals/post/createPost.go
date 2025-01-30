@@ -1,11 +1,13 @@
 package post
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"forum/db"
 	"forum/internals/auth"
@@ -170,90 +172,114 @@ func ServePosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreatePost(w http.ResponseWriter, r *http.Request) {
-	// Retrieve the session from the request context
-	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session) // Replace *Session with your session type
-	if !ok {
-		// Handle the case where the session is not found in the context
-		fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+	session, ok := r.Context().Value(auth.UserSessionKey).(*auth.Session)
+	if !ok || session == nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	if db.DB == nil {
-		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
-		log.Println("Database connection is not initialized.")
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
 		return
 	}
 
-	// Ensure the request method is POST
-	if r.Method != http.MethodPost {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Parse the form data
-	err := r.ParseForm()
-	if err != nil {
-		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
-		return
-	}
-
-	title := r.FormValue("title")
-	content := r.FormValue("content")
+	title := strings.TrimSpace(r.FormValue("title"))
+	content := strings.TrimSpace(r.FormValue("content"))
 	categoryIDs := r.Form["categories[]"]
 
-
-	// Check if required fields are present and validate inputs.
-	if title == "" || content == " " || len(categoryIDs) == 0 {
-		fails.ErrorPageHandler(w, r, http.StatusBadRequest)
+	// Validate input
+	if err := validatePostInput(title, content, categoryIDs); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Additional validation for content length
+	// Begin transaction
+	tx, err := db.DB.Begin()
+	if err != nil {
+		http.Error(w, "Server error", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	// Get the image filename if one was uploaded
+	var imageFilename string
+	uploadMutex.Lock()
+	if upload, exists := currentUpload[int64(session.UserID)]; exists {
+		imageFilename = upload.Filename
+		fmt.Println("Image filename:", imageFilename)
+		delete(currentUpload, int64(session.UserID))
+	}
+	uploadMutex.Unlock()
+
+	// Insert post
+	postID, err := insertPost(tx, session.UserID, title, content, imageFilename)
+	if err != nil {
+		http.Error(w, "Error creating post", http.StatusInternalServerError)
+		return
+	}
+
+	// Insert categories
+	if err := insertPostCategories(tx, postID, categoryIDs); err != nil {
+		http.Error(w, "Error assigning categories", http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Error saving post", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func validatePostInput(title, content string, categoryIDs []string) error {
+	if title == "" || content == "" || len(categoryIDs) == 0 {
+		return fmt.Errorf("missing required fields")
+	}
 	if len(title) > 50 {
-		fails.JSONError(w, http.StatusBadRequest, "Title exceeds 50 characters.")
-		log.Println("Title exceeds 50 characters.")
-		return
+		return fmt.Errorf("title exceeds 50 characters")
 	}
-
 	if len(content) < 5 {
-		fails.JSONError(w, http.StatusBadRequest, "Content is too short.")
-		log.Println("Content is too short.")
-		return
+		return fmt.Errorf("content is too short")
 	}
-
 	if len(content) > 500 {
-		fails.JSONError(w, http.StatusBadRequest, "Content exceed Limit.")
-		log.Println("Content exceed Limit.")
-		return
+		return fmt.Errorf("content exceeds limit")
+	}
+	return nil
+}
+
+func insertPost(tx *sql.Tx, userID int, title, content, imageFilename string) (int64, error) {
+	var result sql.Result
+	var err error
+
+	if imageFilename != "" {
+		result, err = tx.Exec(
+			`INSERT INTO posts (user_id, title, content, image) VALUES (?, ?, ?, ?)`,
+			userID, title, content, imageFilename,
+		)
+	} else {
+		result, err = tx.Exec(
+			`INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`,
+			userID, title, content,
+		)
 	}
 
-	// Use the user ID from the session
-	userID := session.UserID
-
-	// Insert the new post into the POSTS table
-	postQuery := `INSERT INTO posts (user_id, title, content) VALUES (?, ?, ?)`
-	result, err := db.DB.Exec(postQuery, userID, title, content)
 	if err != nil {
-		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
-		return
+		return 0, err
 	}
 
-	// Get the ID of the newly created post
-	postID, err := result.LastInsertId()
-	if err != nil {
-		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
-		return
-	}
+	return result.LastInsertId()
+}
 
-	// Insert into the Post_Categories table
+func insertPostCategories(tx *sql.Tx, postID int64, categoryIDs []string) error {
 	for _, categoryID := range categoryIDs {
-		_, err := db.DB.Exec(`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`, postID, categoryID)
+		_, err := tx.Exec(
+			`INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)`,
+			postID, categoryID,
+		)
 		if err != nil {
-			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
-			return
+			return err
 		}
 	}
-
-	// Redirect to the homepage after successful post creation
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	return nil
 }
