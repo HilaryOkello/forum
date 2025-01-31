@@ -72,99 +72,90 @@ class NotificationManager {
 const notificationManager = new NotificationManager();
 
 // Handle form submission
-document.querySelector("form").addEventListener("submit", function (event) {
+document.querySelector("form").addEventListener("submit", async function(event) {
   event.preventDefault();
 
+  // Validate form inputs
   const title = document.getElementById("title").value.trim();
   const content = document.getElementById("content").value.trim();
   const categories = Array.from(
-    document.getElementById("categories").selectedOptions
-  ).map((option) => option.value);
+      document.getElementById("categories").selectedOptions
+  ).map(option => option.value);
+  const image = document.getElementById("image").files[0];
 
-  // Validate inputs
+  // Input validation
   if (title.length > 50) {
-    notificationManager.show("Title exceeds 50 characters.", "error");
-    return;
+      notificationManager.show("Title exceeds 50 characters.", "error");
+      return;
   }
   if (title.length < 2) {
-    notificationManager.show("Title is too short.", "error");
-    return;
+      notificationManager.show("Title is too short.", "error");
+      return;
   }
-
   if (content.length < 5) {
-    notificationManager.show("Content is too short.", "error");
-    return;
+      notificationManager.show("Content is too short.", "error");
+      return;
   }
-
   if (content.length > 500) {
-    notificationManager.show("Content exceeds Limit.", "error");
-    return;
+      notificationManager.show("Content exceeds Limit.", "error");
+      return;
   }
-
   if (categories.length === 0) {
-    notificationManager.show("Please select at least one category.", "error");
-    return;
+      notificationManager.show("Please select at least one category.", "error");
+      return;
   }
 
-  const postData = new URLSearchParams();
-  postData.append("title", title);
-  postData.append("content", content);
-  categories.forEach((category) => postData.append("categories[]", category));
+  try {
+      // Handle image upload first if an image is selected
+      if (image) {
+          const imageData = new FormData();
+          imageData.append("image", image);
 
-  const image = document.getElementById("image").files[0];
-  const imagedata = new FormData();
-  if (image) {
-    imagedata.append("image", image);
-  
+          const imageResponse = await fetch("/upload-image", {
+              method: "POST",
+              body: imageData
+          });
 
-    fetch("/upload-image", {
-      method: "POST",
-      body: imagedata,
-    })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((data) => {
-          throw new Error(data.error || `Error: ${response.statusText}`);
-        });
-      }
-      return response.json();
-    })
-    .then((data) => {
-      notificationManager.show(data.message, "success");
-    })
-    .catch((error) => {
-      notificationManager.show(error.message, "error");
-    });
-  
-}
+          if (!imageResponse.ok) {
+              const errorData = await imageResponse.json();
+              throw new Error(errorData.error || `Image upload failed: ${imageResponse.statusText}`);
+          }
 
-  fetch("/create-post", {
-    method: "POST",
-    body: postData,
-  })
-    .then((response) => {
-      if (!response.ok) {
-        return response.json().then((data) => {
-          throw new Error(data.message || `Error: ${response.statusText}`);
-        });
+          // Wait for the image upload response
+          await imageResponse.json();
       }
-      return response;
-    })
-    .then((response) => {
-      if (response.redirected) {
-        notificationManager.show("Post created successfully!", "success");
-        setTimeout(() => {
-          window.location.href = response.url;
-        }, 2000);
+
+      // Proceed with creating the post after successful image upload
+      const postData = new URLSearchParams();
+      postData.append("title", title);
+      postData.append("content", content);
+      categories.forEach(category => postData.append("categories[]", category));
+
+      const postResponse = await fetch("/create-post", {
+          method: "POST",
+          body: postData
+      });
+
+      if (!postResponse.ok) {
+          const errorData = await postResponse.json();
+          throw new Error(errorData.message || `Post creation failed: ${postResponse.statusText}`);
       }
-    })
-    .catch((error) => {
+
+      if (postResponse.redirected) {
+          notificationManager.show("Post created successfully!", "success");
+          // Add a small delay before redirect to show the success message
+          setTimeout(() => {
+              window.location.href = postResponse.url;
+          }, 2000);
+      }
+
+  } catch (error) {
       console.error("Error:", error);
       notificationManager.show(
-        error.message || "Failed to create post",
-        "error"
+          error.message || "Failed to process your request",
+          "error"
       );
-    });
+  }
 });
 
 // Populate categories dropdown
@@ -209,3 +200,4 @@ function showNotification(message, type = "success") {
     }, 500);
   }, 2000);
 }
+
