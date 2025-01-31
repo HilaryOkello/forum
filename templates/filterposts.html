@@ -10,7 +10,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/filterpost.css">
   <link rel="stylesheet" href="/static/css/index.css">
-
 </head>
 
 <body>
@@ -97,17 +96,17 @@
       </div>
     </nav>
 
-        <main class="feed" role="main">
+    <main class="feed" role="main">
       <h1>{{.Category}}</h1>
       {{if gt (len .Posts) 0}}
       {{range .Posts}}
       <div class="post" id="post" post-id="{{ .ID}}">
         <div class="votes">
-          <button class="like-btn {{if eq .UserReaction `LIKE`}}selected{{end}}" aria-label="Upvote">
+          <button class="like-btn {{if eq .UserReaction "LIKE"}}selected{{end}}" aria-label="Upvote">
             <i class="fas fa-thumbs-up" aria-hidden="true"></i>
           </button>
           <span>{{ .Likes }}</span>
-          <button class="dislike-btn {{if eq .UserReaction `DISLIKE`}}selected{{end}}" aria-label="Downvote">
+          <button class="dislike-btn {{if eq .UserReaction "DISLIKE"}}selected{{end}}" aria-label="Downvote">
             <i class="fas fa-thumbs-down" aria-hidden="true"></i>
           </button>
           <span>{{ .Dislikes }}</span>
@@ -115,6 +114,9 @@
         <div class="post-content list-post" post-id="{{ .ID }}">
           <a href="#" class="community-name">Posted by {{.UserName}}</a>
           <h2 class="post-title">{{.Title}}</h2>
+          {{if .Image}}
+          <img src="{{.Image}}" alt="{{.Title}}" class="post-image" />
+          {{end}}
           <p>{{.Content}}</p>
           <div class="post-meta">
             <p> {{ .CommentCount }} <i class="far fa-comment-alt" aria-hidden="true"></i></p>
@@ -127,13 +129,15 @@
       <p>No posts in this category</p>
       {{end}}
     </main>
-  </div> 
+  </div>
+
   <footer class="footer" role="contentinfo">
     <div class="footer-links">
       <a href="/about">About</a>
     </div>
     <p>2025 MyReddit. All rights reserved.</p>
   </footer>
+  <script src="/static/js/post.js"></script>
   <script src="/static/js/index.js"></script>
 </body>
 
