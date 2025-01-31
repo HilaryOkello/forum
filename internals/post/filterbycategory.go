@@ -26,10 +26,13 @@ func FetchPostsByCategory(category string, userID int64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
+		var imgPtr *string
+
 		if err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
+			&imgPtr,
 			&post.UserName,
 			&post.CreatedAt,
 			&post.CommentCount,
