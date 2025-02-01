@@ -1,4 +1,4 @@
-# forum
+# forum-image-upload
 
 [![Go Report Card](https://img.shields.io/badge/go_version-1.23.4-green
 )](https://go.dev/dl/
@@ -17,7 +17,7 @@
     - [Contributors](#contributors)
 
 ## Description
-A web forum application that enables user communication through posts and comments. Users can register, create posts, comment, and interact through likes/dislikes. Posts can be categorized and filtered.
+A web forum application that enables user communication through posts and comments. Users can register, create posts with images, comment, and interact through likes/dislikes. Posts can be categorized and filtered.
 
 
 
@@ -38,6 +38,7 @@ graph TD
 ## Features
 - User authentication (register/login)
 - Post creation with categories
+- Post creation with images
 - Commenting system with nested replies
 - Like/dislike system for posts and comments
 - Post filtering by:
@@ -63,7 +64,7 @@ graph TD
 
 ## Running the Application
 ```bash
-git clone https://learn.zone01kisumu.ke/git/josotieno/forum.git
+git clone https://learn.zone01kisumu.ke/git/hilaokello/forum-image-upload.git
 cd forum
 docker-compose build
 docker run 

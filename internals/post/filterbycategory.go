@@ -16,7 +16,6 @@ func FetchPostsByCategory(category string, userID int64) ([]Post, error) {
 	category = strings.TrimSpace(category)
 	category = strings.ToLower(category)
 
-	// Using db.DB to query the database
 	rows, err := db.DB.Query(GetFilteredPostsByCategory, userID, category)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch posts by category: %w", err)
@@ -26,19 +25,28 @@ func FetchPostsByCategory(category string, userID int64) ([]Post, error) {
 	var posts []Post
 	for rows.Next() {
 		var post Post
+		var imgPtr *string // Temporary variable to handle NULL image values
+
 		if err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
+			&imgPtr, // Scan the image column
 			&post.UserName,
 			&post.CreatedAt,
 			&post.CommentCount,
 			&post.Likes,
 			&post.Dislikes,
-			&post.UserReaction, // Populate the UserReaction field
+			&post.UserReaction,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan post: %w", err)
 		}
+
+		// Only set the image if it's not NULL
+		if imgPtr != nil {
+			post.Image = imgPtr
+		}
+
 		posts = append(posts, post)
 	}
 
