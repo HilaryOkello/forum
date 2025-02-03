@@ -29,8 +29,8 @@ var errorTitles = map[int]string{
 	502: "Bad Gateway",
 	503: "Service Unavailable",
 	504: "Gateway Timeout",
-
 }
+
 func ErrorPageHandler(w http.ResponseWriter, r *http.Request, status int) {
 	w.WriteHeader(status)
 	tmpl, err := template.ParseFiles("templates/error.html")
@@ -38,14 +38,14 @@ func ErrorPageHandler(w http.ResponseWriter, r *http.Request, status int) {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	data:=struct{
-		Code int
+	data := struct {
+		Code    int
 		Message string
-		Title string
+		Title   string
 	}{
-		Code: status,
+		Code:    status,
 		Message: errors[status],
-		Title: errorTitles[status],
+		Title:   errorTitles[status],
 	}
 	tmpl.Execute(w, data)
 }
