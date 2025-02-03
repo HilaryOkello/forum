@@ -15,11 +15,6 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
-		return
-	}
-
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -77,6 +72,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
+	} else {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
 	}
 }
 
@@ -121,11 +119,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
-		return
-	}
-	
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	if r.Method == http.MethodGet {
 		err := tmpl.ExecuteTemplate(w, "signup.html", nil)
