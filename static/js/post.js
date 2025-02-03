@@ -82,6 +82,12 @@ document.querySelector("form").addEventListener("submit", async function(event) 
       document.getElementById("categories").selectedOptions
   ).map(option => option.value);
   const image = document.getElementById("image").files[0];
+  //check if image size is above 20mbs
+  const maxSizeInBytes = 20 * 1024 * 1024;
+  if (image && image.size > maxSizeInBytes) {
+    notificationManager.show("Image size exceeds the limit of 20MB.", "error");
+    return; 
+  }
 
   // Input validation
   if (title.length > 50) {
@@ -152,7 +158,7 @@ document.querySelector("form").addEventListener("submit", async function(event) 
   } catch (error) {
       console.error("Error:", error);
       notificationManager.show(
-          error.message || "Failed to process your request",
+           "Failed to process your request, likely due to invalid image size above 20mbs",
           "error"
       );
   }
