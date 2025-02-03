@@ -25,9 +25,9 @@
     </div>
 
     <div class="nav-right">
-      <a href="/" class="nav-link"></a> 
+      <a href="/" class="nav-link"></a>
       <a href="/create-post-form" class="create-post-btn" aria-label="Create new post">Create-Post</a>
-      <div id="notification" class="hidden"></div> 
+      <div id="notification" class="hidden"></div>
       <button class="nav-btn" aria-label="Notifications">
         <i class="far fa-bell" aria-hidden="true"></i>
       </button>
@@ -115,11 +115,13 @@
           <a href="#" class="community-name">Posted by {{.UserName}}</a>
           <h2 class="post-title">{{.Title}}</h2>
           <div class="post-image">
-          <img src="{{.Image}}" alt="{{.Title}}"  />
-        </div>
+            {{ if .Image }}
+            <img src="{{.Image}}" alt="{{.Title}}" />
+            {{ end }}
+          </div>
           <p>{{.Content}}</p>
           <div class="post-meta">
-            <p> {{ .CommentCount }}  <i class="far fa-comment-alt" aria-hidden="true"></i></p>
+            <p> {{ .CommentCount }} <i class="far fa-comment-alt" aria-hidden="true"></i></p>
             <a href="/view-post?id={{.ID }}" aria-label="View Post">View Post</a>
           </div>
         </div>
@@ -129,25 +131,25 @@
 
     <aside class="right-sidebar" role="complementary">
       <h3 id="trending-title">My Contributions</h3>
-  
+
       <!-- Created Posts Card -->
       <div class="trending-card" role="article" aria-labelledby="created-posts-title">
         <a href="#" class="contribution-link" id="created-posts" aria-labelledby="created-posts-title">
-        
+
           <i class="fas fa-pencil-alt" aria-hidden="true" style="margin-right: 8px;"></i>
           <span id="created-posts-title">Created Posts</span>
         </a>
       </div>
-  
+
       <!-- Liked Posts Card -->
       <div class="trending-card" role="article" aria-labelledby="liked-posts-title">
-          <a href="#" class="contribution-link" id="liked-posts" aria-labelledby="liked-posts-title">
-              <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
-              <span id="liked-posts-title">Liked Posts</span>
-          </a>
+        <a href="#" class="contribution-link" id="liked-posts" aria-labelledby="liked-posts-title">
+          <i class="fas fa-heart" aria-hidden="true" style="margin-right: 8px;"></i>
+          <span id="liked-posts-title">Liked Posts</span>
+        </a>
       </div>
-  </aside>
-  
+    </aside>
+
   </div>
 
   <button class="filter-button" aria-label="Show filters">
