@@ -1,14 +1,18 @@
 package post
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 var (
@@ -17,6 +21,11 @@ var (
 )
 
 func UploadImage(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodPost {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return 
+	}
 	session := auth.CheckIfLoggedIn(w, r)
 	if session == nil {
 		http.Error(w, "User not logged in", http.StatusUnauthorized)
@@ -39,7 +48,12 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 
 	// Generate unique filename
-	filename := header.Filename
+	filename, err := generateUniqueFilename(header.Filename)
+
+	if err != nil {
+		http.Error(w, "Error processing upload", http.StatusInternalServerError)
+		return
+	}
 
 	// Ensure upload directory exists
 	uploadDir := "static/images"
@@ -73,4 +87,21 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"message":"upload successful","filename":"%s"}`, "/static/images/"+filename)
+}
+
+func generateUniqueFilename(originalFilename string) (string, error) {
+	// Generate 16 random bytes
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+
+	// Get the file extension from original filename
+	ext := strings.ToLower(filepath.Ext(originalFilename))
+	if ext == "" {
+		ext = ".jpg" // Default extension if none provided
+	}
+
+	
+	return hex.EncodeToString(bytes) + ext, nil
 }
