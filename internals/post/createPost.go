@@ -40,8 +40,6 @@ func ServeCreatePostForm(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-
-
 // FetchCategories retrieves categories with descriptions from the database
 func FetchCategories() ([]Category, error) {
 	rows, err := db.DB.Query("SELECT id, name, description FROM categories")
