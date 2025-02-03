@@ -14,7 +14,6 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-
 func Login(w http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.ParseGlob("templates/*.html"))
 	if r.Method == http.MethodPost {
@@ -73,6 +72,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 			return
 		}
+	} else {
+		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
+		return
 	}
 }
 

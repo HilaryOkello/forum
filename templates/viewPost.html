@@ -21,7 +21,7 @@
 
         <div class="search" role="search">
             <i class="fas fa-search" aria-hidden="true"></i>
-            <input type="text" placeholder="Search MyReddit" aria-label="Search posts" />
+            <input type="text" placeholder="Search Forum" aria-label="Search posts" />
         </div>
 
         <div class="nav-right">
@@ -111,7 +111,9 @@
                 <div class="post-content">
                     <a href="#" class="community-name">Posted by {{.Post.UserName}}</a>
                     <h2 class="post-title">{{.Post.Title}}</h2>
+                    {{ if .Post.Image }}
                     <img src="{{.Post.Image}}" alt="{{.Post.Title}}" class="post-image" />
+                    {{ end }}
                     <p>{{.Post.Content}}</p>
                     <div class="post-meta">
                         <a href="#" id="comment-count" aria-label="View comments"><i class="far fa-comment-alt"
@@ -136,11 +138,10 @@
 
     <footer class="footer" role="contentinfo">
         <div class="footer-links">
-        
-            
+          <a href="/about">About</a>
         </div>
-        <p>2025 MyReddit. All rights reserved.</p>
-    </footer>
+        <p>2025 Forum. All rights reserved.</p>
+      </footer>
     <script src="/static/js/index.js"></script>
     <script src="/static/js/comments.js"></script>
 </body>

@@ -13,7 +13,6 @@ import (
 	"forum/internals/fails"
 )
 
-
 func FetchPosts(userID int64) ([]Post, error) {
 
 	rows, err := db.DB.Query(FetchAllPostsWithMetadata, userID)
@@ -57,7 +56,7 @@ func FetchPosts(userID int64) ([]Post, error) {
 
 	// // Debug logging - remove in production
 	// for _, post := range posts {
-	// 	fmt.Printf("Fetched post: ID=%d, Title=%s, Image=%v\n", 
+	// 	fmt.Printf("Fetched post: ID=%d, Title=%s, Image=%v\n",
 	// 		post.ID, post.Title, post.Image)
 	// }
 
@@ -120,10 +119,10 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		userID = 0
 	} else {
 		// Validate session data
-        if session.UserID <= 0 || session.UserName == "" {
-            fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
-            return
-        }
+		if session.UserID <= 0 || session.UserName == "" {
+			fails.ErrorPageHandler(w, r, http.StatusUnauthorized)
+			return
+		}
 
 		pageData = PageData{
 			IsLoggedIn: true,
@@ -141,14 +140,14 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 		case strings.Contains(err.Error(), "invaid post ID"):
 			fails.ErrorPageHandler(w, r, http.StatusBadRequest)
 		default:
-			fails.ErrorPageHandler(w,r, http.StatusInternalServerError)
+			fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
 		}
 		return
 	}
 
 	if post == nil || post.ID == 0 {
 		fails.ErrorPageHandler(w, r, http.StatusInternalServerError)
-		return 
+		return
 	}
 
 	response := struct {
@@ -167,6 +166,11 @@ func ViewPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeAboutPage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		return
+	}
+	
 	if r.URL.Path != "/about" {
 		fails.ErrorPageHandler(w, r, http.StatusNotFound)
 		return
@@ -177,7 +181,6 @@ func ServeAboutPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	tmpl := template.Must(template.ParseFiles("templates/about.html"))
 	if err := tmpl.Execute(w, nil); err != nil {
 		log.Println("Template execution error:", err)

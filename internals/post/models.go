@@ -7,7 +7,7 @@ type Post struct {
 	ID           int
 	Title        string
 	Content      string
-	Image 	  *string
+	Image        *string
 	UserName     string
 	CreatedAt    time.Time
 	CommentCount int

@@ -94,8 +94,6 @@ func ViewPostsByCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
-
 	// Prepare the data to be passed to the template
 	data := struct {
 		Category string

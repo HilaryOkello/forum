@@ -8,9 +8,15 @@ import (
 
 	"forum/db"
 	"forum/internals/auth"
+	"forum/internals/fails"
 )
 
 func FilterbyUser(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		return
+	}
+
 	// Retrieve the user name from the session
 	session := auth.CheckIfLoggedIn(w, r)
 
@@ -61,6 +67,11 @@ func sendErrorResponse(w http.ResponseWriter, message string, status int) {
 }
 
 func FilterbyLikes(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		fails.ErrorPageHandler(w, r, http.StatusNotFound)
+		return
+	}
+
 	// Retrieve the user id from the session
 	session := auth.CheckIfLoggedIn(w, r)
 
@@ -82,12 +93,6 @@ func FilterbyLikes(w http.ResponseWriter, r *http.Request) {
 }
 
 func FetchPostsByLikes(userID int) ([]int, error) {
-	// query := `
-	// 	SELECT post_id
-	// 	FROM post_reactions
-	// 	WHERE user_id = ? AND reaction_type = 'LIKE';
-	// `
-
 	rows, err := db.DB.Query(FetchLikedPostsByUser, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch liked post IDs: %w", err)

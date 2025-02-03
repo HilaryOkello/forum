@@ -24,7 +24,7 @@ func UploadImage(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		fails.ErrorPageHandler(w, r, http.StatusMethodNotAllowed)
-		return 
+		return
 	}
 	session := auth.CheckIfLoggedIn(w, r)
 	if session == nil {
@@ -102,6 +102,5 @@ func generateUniqueFilename(originalFilename string) (string, error) {
 		ext = ".jpg" // Default extension if none provided
 	}
 
-	
 	return hex.EncodeToString(bytes) + ext, nil
 }
