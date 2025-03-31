@@ -64,7 +64,7 @@ graph TD
 
 ## Running the Application
 ```bash
-git clone https://learn.zone01kisumu.ke/git/hilaokello/forum-image-upload.git
+git clone https://github.com/HilaryOkello/forum.git
 cd forum
 docker-compose build
 docker run 
